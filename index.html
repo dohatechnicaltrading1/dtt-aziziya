@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DTT - Aziziya Cloud Sync</title>
+    <title>DTT - AZIZIYA ULTIMATE SYSTEM</title>
     <style>
         :root { --p: #0f6e56; --s: #d4af37; --bg: #f1f5f9; --txt: #1e293b; --err: #be123c; --success: #16a34a; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; color: var(--txt); }
         
         @media print {
-            .no-print, .nav, .action-btns { display: none !important; }
+            .no-print, .nav, .action-btns, .tool-btn { display: none !important; }
             .print-only { display: block !important; padding: 20px; }
-            table { width: 100%; border-collapse: collapse; border: 1px solid #000; }
+            table { width: 100%; border-collapse: collapse; border: 1px solid #000; font-size: 14px; }
             th, td { border: 1px solid #000; padding: 10px; text-align: left; }
         }
         .print-only { display: none; }
@@ -19,11 +19,11 @@
         .header { background: var(--p); color: white; padding: 20px; text-align: center; border-bottom: 5px solid var(--s); position: relative; }
         .sync-status { position: absolute; top: 10px; right: 10px; font-size: 10px; padding: 4px 8px; border-radius: 4px; background: rgba(0,0,0,0.2); }
         
-        .nav { display: flex; background: white; border-bottom: 1px solid #ddd; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .tab { flex: 1; padding: 15px 5px; text-align: center; cursor: pointer; font-weight: bold; font-size: 12px; border-bottom: 3px solid transparent; }
+        .nav { display: flex; background: white; border-bottom: 1px solid #ddd; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); overflow-x: auto; }
+        .tab { flex: 1; min-width: 80px; padding: 15px 5px; text-align: center; cursor: pointer; font-weight: bold; font-size: 12px; border-bottom: 3px solid transparent; }
         .tab.active { color: var(--p); border-bottom: 3px solid var(--p); background: #f8fafc; }
 
-        .pg { display: none; padding: 15px; max-width: 800px; margin: auto; }
+        .pg { display: none; padding: 15px; max-width: 900px; margin: auto; }
         .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
         .card { background: white; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
 
@@ -36,18 +36,20 @@
         .btn { border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; font-size: 14px; transition: 0.2s; }
         .btn-p { background: var(--p); color: white; }
         .btn-d { background: var(--err); color: white; }
+        .btn-s { background: var(--s); color: white; }
         .btn-outline { background: white; color: var(--p); border: 2px solid var(--p); }
-        .tool-btn { background: none; border: none; cursor: pointer; font-size: 14px; padding: 0 4px; }
-        
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 15px; }
-        .modal-box { background: white; padding: 25px; border-radius: 15px; width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto; }
         
         table { width: 100%; border-collapse: collapse; font-size: 11px; }
         th { background: #f8fafc; padding: 8px; text-align: left; border-bottom: 1px solid #e2e8f0; }
         td { padding: 8px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+        
+        .tool-btn { background: none; border: none; cursor: pointer; font-size: 14px; padding: 4px; }
         .edit-tag { font-size: 9px; color: #94a3b8; display: block; margin-top: 2px; font-style: italic; }
-
         .admin-only { display: none; }
+
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 15px; }
+        .modal-box { background: white; padding: 25px; border-radius: 15px; width: 100%; max-width: 450px; max-height: 90vh; overflow-y: auto; }
+        .rep-box { padding: 15px; border-radius: 10px; border-left: 5px solid var(--s); margin-bottom: 10px; background: #f8fafc; }
     </style>
 </head>
 <body>
@@ -57,166 +59,179 @@
         <h2 style="color:var(--p); margin-top:0;">DTT AZIZIYA</h2>
         <input type="text" id="l-user" placeholder="Username">
         <input type="password" id="l-pass" placeholder="Password">
-        <button class="btn btn-p" onclick="login()">Access System</button>
+        <button class="btn btn-p" onclick="login()">Enter System</button>
         <p id="l-err" style="color:red; font-size:11px; margin-top:10px;"></p>
     </div>
 </div>
 
+<div id="print-view" class="print-only">
+    <center>
+        <h1 style="margin:0;">Doha Technical Trading W.L.L</h1>
+        <p>Al Aziziya, Qatar | Mobile: 66682315</p>
+        <hr>
+        <h3>STATEMENT OF ACCOUNT</h3>
+    </center>
+    <div id="p-info" style="margin:20px 0; font-size:16px; line-height:1.6;"></div>
+    <table id="p-table">
+        <thead><tr style="background:#f1f5f9"><th>Issue Date</th><th>Description</th><th>Debit (QAR)</th><th>Credit (QAR)</th></tr></thead>
+        <tbody id="p-tbody"></tbody>
+    </table>
+    <h3 id="p-total" style="text-align:right; margin-top:20px;"></h3>
+</div>
+
 <div id="app" class="no-print" style="display:none">
     <div class="header">
-        <div id="sync-indicator" class="sync-status">Connecting...</div>
-        <h1 style="margin:0; font-size:20px;">Doha Technical Trading</h1>
-        <p style="margin:5px 0 0; font-size:12px; opacity:0.8;">Cloud-Linked Management</p>
+        <div id="sync-indicator" class="sync-status">Connected</div>
+        <h1 style="margin:0; font-size:20px;">Doha Technical Trading W.L.L</h1>
+        <p style="margin:5px 0 0; font-size:12px; opacity:0.8;">Aziziya Branch | Mobile: 66682315</p>
     </div>
 
     <div class="nav">
         <div class="tab active" onclick="page('dash')">Dashboard</div>
         <div class="tab" onclick="page('cust')">Customers</div>
-        <div class="tab" onclick="page('hist')">Activity Log</div>
+        <div class="tab" onclick="page('hist')">History</div>
+        <div class="tab" onclick="page('rep')">Reports</div>
         <div class="tab" onclick="page('sett')">Settings</div>
     </div>
 
     <div id="pg-dash" class="pg" style="display:block">
         <div class="stats">
-            <div class="card"><h2 id="st-total" style="color:var(--p); margin:0;">0.00</h2><small>Total Outstanding</small></div>
-            <div class="card"><h2 id="st-count" style="margin:0;">0</h2><small>Total Clients</small></div>
+            <div class="card"><h2 id="st-total" style="color:var(--p); margin:0;">0.00</h2><small>Total Debt (QAR)</small></div>
+            <div class="card"><h2 id="st-count" style="margin:0;">0</h2><small>Active Clients</small></div>
         </div>
-        <button class="btn btn-p" onclick="openM('cust')" style="padding:15px;">+ Register New Customer</button>
+        <button class="btn btn-p" onclick="openM('cust')" style="padding:15px; font-size:16px;">+ Register New Customer</button>
     </div>
 
     <div id="pg-cust" class="pg">
-        <input type="text" placeholder="Search by name or phone..." onkeyup="search(this.value)">
+        <input type="text" placeholder="Search by name, phone or ID..." onkeyup="search(this.value)">
         <div id="clist"></div>
     </div>
 
     <div id="pg-hist" class="pg">
-        <div class="card" style="text-align:left">
-            <h3>Recent Transactions</h3>
+        <div class="card" style="text-align:left; overflow-x: auto;">
+            <h3>Global Activity Log</h3>
             <table>
-                <thead><tr><th>Issue Date</th><th>Customer</th><th>Details</th><th>Amt</th><th>Action</th></tr></thead>
+                <thead><tr><th>Issue Date</th><th>Customer</th><th>Details</th><th>Amt</th><th>By</th><th>Action</th></tr></thead>
                 <tbody id="full-history-body"></tbody>
             </table>
         </div>
     </div>
 
+    <div id="pg-rep" class="pg">
+        <div class="card" style="text-align:left">
+            <h3>Monthly Business Summary</h3>
+            <input type="month" id="rep-month" onchange="genReport()">
+            <div id="rep-results" style="display:none; margin-top:15px;">
+                <div class="rep-box">
+                    <small>Credit Given Out:</small>
+                    <h3 style="color:var(--err)" id="rep-out">QAR 0.00</h3>
+                </div>
+                <div class="rep-box" style="border-left-color:var(--p)">
+                    <small>Payments Received:</small>
+                    <h3 style="color:var(--p)" id="rep-in">QAR 0.00</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="pg-sett" class="pg">
         <div class="card" style="text-align:left; margin-bottom:15px;">
-            <h3>Cloud Connection</h3>
-            <p style="font-size:12px; color:#666">Status: <span id="conn-status" style="font-weight:bold">Linked to Google Sheets</span></p>
-            <button class="btn btn-outline" onclick="loadFromCloud()">Force Refresh from Cloud</button>
-        </div>
-        <div class="card" style="text-align:left; margin-bottom:15px;">
-            <h3>Staff Management</h3>
-            <div id="ulist"></div>
+            <h3>Staff Users</h3>
+            <div id="ulist" style="margin-bottom:15px; font-size:13px;"></div>
             <div class="admin-only">
                 <input type="text" id="nu-name" placeholder="Staff Name">
-                <input type="text" id="nu-user" placeholder="Username">
+                <input type="text" id="nu-user" placeholder="Login ID">
                 <input type="text" id="nu-pass" placeholder="Password">
                 <button class="btn btn-p" onclick="addUser()">Add Staff</button>
             </div>
         </div>
+        
+        <div class="card" style="text-align:left; margin-bottom:15px;">
+            <h3>Manual Backup</h3>
+            <button class="btn btn-s" onclick="exportData()" style="margin-bottom:10px;">Generate Backup Code</button>
+            <button class="btn btn-outline" onclick="importData()">Import Backup Code</button>
+            <textarea id="backup-code" style="display:none; margin-top:10px; font-size:10px; height:60px;" readonly></textarea>
+        </div>
+
         <div class="card admin-only" style="border-top:3px solid var(--err); text-align:left;">
-            <h3 style="color:var(--err)">Advanced</h3>
-            <button class="btn btn-d" onclick="wipeSystem()">Format Data</button>
+            <h3 style="color:var(--err)">Master Format</h3>
+            <button class="btn btn-d" onclick="wipeSystem()">Format All Data</button>
         </div>
     </div>
 </div>
 
 <div id="m-cust" class="modal"><div class="modal-box">
-    <h3>Customer Enrollment</h3>
+    <h3>New Customer Profile</h3>
     <input type="text" id="nc-name" placeholder="Full Name">
     <input type="text" id="nc-phone" placeholder="Mobile Number">
-    <textarea id="nc-desc" placeholder="Customer Notes/Identity Info"></textarea>
+    <input type="text" id="nc-nation" placeholder="Nationality">
+    <input type="text" id="nc-id" placeholder="QID / Passport Number">
     <button class="btn btn-p" onclick="saveCust()">Register</button>
     <button class="btn" style="margin-top:10px" onclick="closeM('cust')">Cancel</button>
 </div></div>
 
 <div id="m-txn" class="modal"><div class="modal-box">
     <h3 id="txn-head">Transaction</h3>
-    <label>Amount (QAR)</label>
-    <input type="number" id="tx-amt" placeholder="0.00">
-    <label>Description</label>
-    <textarea id="tx-desc" placeholder="Details..."></textarea>
-    <label>Issue Date</label>
+    <input type="number" id="tx-amt" placeholder="Amount (QAR)">
+    <textarea id="tx-desc" placeholder="Details (Items/Service)"></textarea>
+    <label style="font-size:12px">Issue Date:</label>
     <input type="date" id="tx-date">
     <button id="tx-btn" class="btn"></button>
     <button class="btn" style="margin-top:10px" onclick="closeM('txn')">Cancel</button>
 </div></div>
 
 <div id="m-edit" class="modal"><div class="modal-box">
-    <h3>Modify Record</h3>
-    <label>Issue Date</label>
+    <h3>Edit Record</h3>
+    <label style="font-size:12px">Issue Date:</label>
     <input type="date" id="ed-date">
-    <label>Amount (QAR)</label>
+    <label style="font-size:12px">Amount (QAR):</label>
     <input type="number" id="ed-amt">
-    <label>Description</label>
+    <label style="font-size:12px">Description:</label>
     <textarea id="ed-desc"></textarea>
-    <button class="btn btn-p" onclick="processEdit()">Save Changes</button>
+    <button class="btn btn-p" onclick="processEdit()">Apply Changes</button>
     <button class="btn" style="margin-top:10px" onclick="closeM('edit')">Cancel</button>
 </div></div>
 
 <script>
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwwL7UvDDb1vb9NdQjceefNPab9Cbnmk-aoYUaOYLF1Wj6j_TwhwBEDvK37KA8rwUMlvg/exec'; 
-    const DB_KEY = 'dtt_cloud_sync_final';
+    const DB_KEY = 'dtt_aziziya_vFinal';
     
-    let db = JSON.parse(localStorage.getItem(DB_KEY)) || { c: [], u: [{n: 'Admin', u: 'admin', p: '123455'}] };
+    let db = JSON.parse(localStorage.getItem(DB_KEY)) || { c: [], u: [{n: 'Admin', u: 'admin', p: '123456'}] };
     let currentUser = "Admin", currentUsername = "admin", actCid = null, actTxId = null;
     const todayStr = new Date().toISOString().split('T')[0];
 
     async function syncToCloud() {
-        const indicator = document.getElementById('sync-indicator');
-        indicator.innerText = "☁ Syncing...";
-        indicator.style.color = "orange";
+        const ind = document.getElementById('sync-indicator');
+        ind.innerText = "Syncing..."; ind.style.color = "yellow";
         try {
-            await fetch(WEB_APP_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(db)
-            });
-            indicator.innerText = "☁ Cloud Updated";
-            indicator.style.color = "white";
-        } catch (e) {
-            indicator.innerText = "⚠ Offline Mode";
-            indicator.style.color = "red";
-        }
+            await fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', headers: {'Content-Type':'application/json'}, body: JSON.stringify(db) });
+            ind.innerText = "Cloud Synced"; ind.style.color = "white";
+        } catch (e) { ind.innerText = "Offline"; ind.style.color = "red"; }
     }
 
-    async function loadFromCloud() {
-        const indicator = document.getElementById('sync-indicator');
-        indicator.innerText = "☁ Pulling Data...";
+    async function pullCloud() {
         try {
-            const response = await fetch(WEB_APP_URL);
-            const cloudData = await response.json();
-            if (cloudData && cloudData.c) {
-                db = cloudData;
-                localStorage.setItem(DB_KEY, JSON.stringify(db));
-                render();
-                indicator.innerText = "☁ Cloud Connected";
-                indicator.style.color = "white";
-            }
-        } catch (e) {
-            console.log("Using local copy");
-            indicator.innerText = "☁ Local Cache";
-        }
+            const r = await fetch(WEB_APP_URL);
+            const data = await r.json();
+            if(data && data.c) { db = data; save(false); render(); }
+        } catch(e) {}
     }
 
-    function save() { 
+    function save(sync = true) { 
         localStorage.setItem(DB_KEY, JSON.stringify(db)); 
-        syncToCloud(); 
+        if(sync) syncToCloud(); 
     }
 
     function login() {
-        const u = document.getElementById('l-user').value, p = document.getElementById('l-pass').value;
+        const u = document.getElementById('l-user').value.trim(), p = document.getElementById('l-pass').value.trim();
         const user = db.u.find(x => x.u === u && x.p === p);
         if(user) {
             currentUser = user.n; currentUsername = user.u;
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('app').style.display = 'block';
             if(currentUsername === 'admin') document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'block');
-            loadFromCloud();
-            render();
-        } else { document.getElementById('l-err').innerText = "Access Denied."; }
+            pullCloud(); render();
+        } else { document.getElementById('l-err').innerText = "Incorrect Username or Password"; }
     }
 
     function page(p) {
@@ -229,12 +244,18 @@
     function closeM(id) { document.getElementById('m-'+id).style.display='none'; }
 
     function saveCust() {
-        db.c.push({ id: Date.now(), n: document.getElementById('nc-name').value, ph: document.getElementById('nc-phone').value, desc: document.getElementById('nc-desc').value, bal: 0, h: [] });
+        const name = document.getElementById('nc-name').value;
+        if(!name) return;
+        db.c.push({ 
+            id: Date.now(), n: name, ph: document.getElementById('nc-phone').value, 
+            na: document.getElementById('nc-nation').value, idno: document.getElementById('nc-id').value, 
+            bal: 0, h: [], created: todayStr 
+        });
         save(); closeM('cust'); render();
     }
 
     function openTxn(type, cid) {
-        document.getElementById('txn-head').innerText = type === 'due' ? 'Record Due' : 'Record Payment';
+        document.getElementById('txn-head').innerText = type === 'due' ? 'Add Due' : 'Add Payment';
         document.getElementById('tx-date').value = todayStr;
         document.getElementById('tx-btn').innerText = 'Save Record';
         document.getElementById('tx-btn').className = type === 'due' ? 'btn btn-d' : 'btn btn-p';
@@ -247,25 +268,21 @@
         const c = db.c.find(x => x.id === actCid);
         if(!amt) return;
         c.h.push({ 
-            id: Date.now(), 
-            d: document.getElementById('tx-date').value || todayStr, 
-            desc: document.getElementById('tx-desc').value || (type==='due'?'Items/Repair':'Cash Payment'), 
-            t: type === 'due' ? 'DEBIT' : 'CREDIT', 
-            a: amt, 
-            s: currentUser 
+            id: Date.now(), d: document.getElementById('tx-date').value || todayStr, 
+            desc: document.getElementById('tx-desc').value || (type==='due'?'Material':'Payment'), 
+            t: type === 'due' ? 'DEBIT' : 'CREDIT', a: amt, s: currentUser 
         });
-        recalcBalance(c); save(); closeM('txn'); render();
+        recalc(c); save(); closeM('txn'); render();
         document.getElementById('tx-amt').value = ''; document.getElementById('tx-desc').value = '';
     }
 
-    function recalcBalance(customer) {
+    function recalc(customer) {
         customer.bal = customer.h.reduce((sum, h) => sum + (h.t === 'DEBIT' ? h.a : -h.a), 0);
     }
 
     function openEdit(cid, txId) {
         actCid = cid; actTxId = txId;
-        const c = db.c.find(x => x.id === cid);
-        const tx = c.h.find(h => h.id === txId);
+        const c = db.c.find(x => x.id === cid), tx = c.h.find(h => h.id === txId);
         document.getElementById('ed-date').value = tx.d;
         document.getElementById('ed-amt').value = tx.a;
         document.getElementById('ed-desc').value = tx.desc;
@@ -273,65 +290,94 @@
     }
 
     function processEdit() {
-        const c = db.c.find(x => x.id === actCid);
-        const tx = c.h.find(h => h.id === actTxId);
+        const c = db.c.find(x => x.id === actCid), tx = c.h.find(h => h.id === actTxId);
         tx.d = document.getElementById('ed-date').value;
         tx.a = parseFloat(document.getElementById('ed-amt').value);
         tx.desc = document.getElementById('ed-desc').value;
-        tx.eb = currentUser; 
-        tx.et = new Date().toLocaleString('en-GB', { hour12: true });
-        recalcBalance(c); save(); closeM('edit'); render(); renderHistory();
+        tx.eb = currentUser; tx.et = new Date().toLocaleString('en-GB', { hour12: true });
+        recalc(c); save(); closeM('edit'); render(); renderHistory();
     }
 
-    function undoTxn(cid, txId) {
-        if(confirm("Confirm: Delete this entry permanently?")) {
+    function deleteTxn(cid, txId) {
+        if(confirm("Confirm Delete?")) {
             const c = db.c.find(x => x.id === cid);
             c.h = c.h.filter(h => h.id !== txId);
-            recalcBalance(c); save(); render(); renderHistory();
+            recalc(c); save(); render(); renderHistory();
         }
-    }
-
-    function renderHistory() {
-        let all = [];
-        db.c.forEach(c => c.h.forEach(h => all.push({...h, cid: c.id, cn: c.n})));
-        all.sort((a,b) => b.id - a.id);
-        document.getElementById('full-history-body').innerHTML = all.slice(0, 60).map(h => `
-            <tr>
-                <td>${h.d}</td>
-                <td><b>${h.cn}</b></td>
-                <td>${h.desc} ${h.eb ? `<span class="edit-tag">Edited by ${h.eb} @ ${h.et}</span>` : ''}</td>
-                <td style="color:${h.t==='DEBIT'?'red':'green'}">${h.a.toFixed(2)}</td>
-                <td>
-                    <button class="tool-btn" onclick="openEdit(${h.cid}, ${h.id})">✏️</button>
-                    <button class="tool-btn" style="color:red" onclick="undoTxn(${h.cid}, ${h.id})">🗑️</button>
-                </td>
-            </tr>
-        `).join('');
     }
 
     function render() {
         document.getElementById('clist').innerHTML = db.c.map(c => `
             <div class="cust-row">
                 <div class="cust-top" onclick="this.parentElement.classList.toggle('open')">
-                    <div><b>${c.n}</b><br><small>${c.ph}</small></div>
+                    <div><b>${c.n}</b><br><small>${c.ph || ''} | ${c.na || ''}</small></div>
                     <div style="color:var(--err); font-weight:800;">QAR ${c.bal.toFixed(2)}</div>
                 </div>
                 <div class="cust-body">
-                    <p style="font-size:11px; color:#666">Notes: ${c.desc || '-'}</p>
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
-                        <button class="btn btn-d" onclick="openTxn('due', ${c.id})">+ Add Due</button>
-                        <button class="btn btn-p" onclick="openTxn('pay', ${c.id})">+ Payment</button>
+                    <p style="font-size:12px; color:#555"><b>ID:</b> ${c.idno || 'Not Provided'}</p>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                        <button class="btn btn-d" onclick="openTxn('due', ${c.id})">Add Due</button>
+                        <button class="btn btn-p" onclick="openTxn('pay', ${c.id})">Receive Pay</button>
                     </div>
-                    <table style="background:white; border-radius:5px;">
-                        ${c.h.slice(-3).map(h => `<tr><td>${h.d}</td><td>${h.desc}</td><td align="right"><b>${h.a.toFixed(2)}</b></td></tr>`).join('')}
+                    <button class="btn btn-s" onclick="printR(${c.id})" style="width:100%; margin-top:10px;">📄 Print Statement</button>
+                    <table style="margin-top:10px;">
+                        ${c.h.slice(-5).reverse().map(h => `<tr><td>${h.d}</td><td>${h.desc}</td><td align="right">${h.a.toFixed(2)}</td></tr>`).join('')}
                     </table>
-                    <button class="btn btn-outline" style="margin-top:10px; padding:6px; font-size:12px" onclick="page('hist')">View Full Details</button>
                 </div>
             </div>
         `).join('');
-        document.getElementById('ulist').innerHTML = db.u.map(u => `<div style="padding:10px; border-bottom:1px solid #eee;">${u.n} (${u.u})</div>`).join('');
         document.getElementById('st-total').innerText = db.c.reduce((s,x)=>s+x.bal,0).toFixed(2);
         document.getElementById('st-count').innerText = db.c.length;
+        document.getElementById('ulist').innerHTML = db.u.map(u => `<div style="padding:5px 0">• <b>${u.n}</b> (${u.u})</div>`).join('');
+    }
+
+    function renderHistory() {
+        let all = [];
+        db.c.forEach(c => c.h.forEach(h => all.push({...h, cid: c.id, cn: c.n})));
+        all.sort((a,b) => b.id - a.id);
+        document.getElementById('full-history-body').innerHTML = all.slice(0, 100).map(h => `
+            <tr>
+                <td>${h.d}</td>
+                <td><b>${h.cn}</b></td>
+                <td>${h.desc} ${h.eb ? `<span class="edit-tag">Edited by ${h.eb} @ ${h.et}</span>` : ''}</td>
+                <td style="color:${h.t==='DEBIT'?'red':'green'}">${h.a.toFixed(2)}</td>
+                <td>${h.s}</td>
+                <td class="action-btns">
+                    <button class="tool-btn" onclick="openEdit(${h.cid}, ${h.id})">✏️</button>
+                    <button class="tool-btn" style="color:red" onclick="deleteTxn(${h.cid}, ${h.id})">🗑️</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function printR(cid) {
+        const c = db.c.find(x => x.id === cid);
+        document.getElementById('p-info').innerHTML = `<b>Customer Name:</b> ${c.n} <br><b>Mobile Number:</b> ${c.ph}<br><b>ID Number:</b> ${c.idno}`;
+        document.getElementById('p-tbody').innerHTML = c.h.map(h => `<tr><td>${h.d}</td><td>${h.desc}</td><td>${h.t==='DEBIT'?h.a.toFixed(2):'-'}</td><td>${h.t==='CREDIT'?h.a.toFixed(2):'-'}</td></tr>`).join('');
+        document.getElementById('p-total').innerText = "Total Outstanding: QAR " + c.bal.toFixed(2);
+        window.print();
+    }
+
+    function genReport() {
+        const m = document.getElementById('rep-month').value;
+        if(!m) return;
+        let out = 0, inc = 0;
+        db.c.forEach(c => c.h.forEach(h => { if(h.d.startsWith(m)) { if(h.t==='DEBIT') out+=h.a; else inc+=h.a; } }));
+        document.getElementById('rep-results').style.display = 'block';
+        document.getElementById('rep-out').innerText = "QAR " + out.toFixed(2);
+        document.getElementById('rep-in').innerText = "QAR " + inc.toFixed(2);
+    }
+
+    function exportData() {
+        const code = btoa(encodeURIComponent(JSON.stringify(db)));
+        document.getElementById('backup-code').style.display = 'block';
+        document.getElementById('backup-code').value = code;
+        alert("Backup Code generated!");
+    }
+
+    function importData() {
+        const code = prompt("Paste Code:");
+        if(code) { try { db = JSON.parse(decodeURIComponent(atob(code))); save(); location.reload(); } catch(e) { alert("Invalid Code"); } }
     }
 
     function addUser() {
@@ -341,12 +387,12 @@
 
     function search(q) {
         q = q.toLowerCase();
-        document.querySelectorAll('.cust-row').forEach(row => row.style.display = row.innerText.toLowerCase().includes(q) ? 'block' : 'none');
+        document.querySelectorAll('.cust-row').forEach(r => r.style.display = r.innerText.toLowerCase().includes(q) ? 'block' : 'none');
     }
 
     function wipeSystem() {
-        if(prompt("Enter Admin Code to format all data:") === "123455") {
-            db = { c: [], u: [{n: 'Admin', u: 'admin', p: '123455'}] }; save(); location.reload();
+        if(prompt("Type '123456' to format:") === "123456") {
+            db = { c: [], u: [{n: 'Admin', u: 'admin', p: '123456'}] }; save(); location.reload();
         }
     }
 </script>
