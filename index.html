@@ -5,16 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DTT - Aziziya Cloud System</title>
     <style>
-        :root { --p: #0f6e56; --s: #d4af37; --bg: #f1f5f9; --txt: #1e293b; --err: #be123c; }
+        :root { --p: #0f6e56; --s: #d4af37; --bg: #f1f5f9; --txt: #1e293b; --err: #dc2626; --success: #16a34a; --wa: #25D366; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; color: var(--txt); }
         
         @media print {
-            .no-print, .nav { display: none !important; }
-            .print-only { display: block !important; padding: 20px; }
-            table { width: 100%; border-collapse: collapse; border: 1px solid #000; }
-            th, td { border: 1px solid #000; padding: 10px; text-align: left; }
+            body * { visibility: hidden; }
+            #print-report, #print-report * { visibility: visible; }
+            #print-report { position: absolute; left: 0; top: 0; width: 100%; display: block !important; }
+            .no-print { display: none !important; }
         }
-        .print-only { display: none; }
+
+        #print-report { display: none; padding: 40px; background: white; color: black; }
+        .report-header { text-align: center; border-bottom: 2px solid var(--p); padding-bottom: 10px; margin-bottom: 20px; }
+        .report-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .report-table th, .report-table td { border: 1px solid #ddd; padding: 10px; text-align: left; font-size: 12px; }
+        .report-table th { background-color: #f8f9fa; }
 
         .header { background: var(--p); color: white; padding: 20px; text-align: center; border-bottom: 5px solid var(--s); }
         .nav { display: flex; background: white; border-bottom: 1px solid #ddd; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
@@ -35,17 +40,39 @@
         .btn-p { background: var(--p); color: white; }
         .btn-d { background: var(--err); color: white; }
         .btn-s { background: var(--s); color: white; }
+        .btn-wa { background: var(--wa); color: white; }
         .btn-outline { background: white; color: var(--p); border: 2px solid var(--p); }
         
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 15px; }
         .modal-box { background: white; padding: 25px; border-radius: 15px; width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto; }
-        
         .sync-status { font-size: 10px; color: #666; margin-top: 5px; }
     </style>
 </head>
 <body>
 
-<div id="login-screen" style="position:fixed; inset:0; background:var(--p); z-index:9999; display:flex; align-items:center; justify-content:center;">
+<div id="print-report">
+    <div class="report-header">
+        <h1 style="margin:0; color:#0f6e56;">Doha Technical Trading W.L.L</h1>
+        <p style="margin:5px 0;">Aziziya Branch | Mobile: 66682315</p>
+        <h2 style="margin:15px 0 5px; color:#d4af37;">STATEMENT OF ACCOUNT</h2>
+    </div>
+    <div id="rp-cust-info" style="margin-bottom: 20px; line-height: 1.6;"></div>
+    <table class="report-table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Debit (QAR)</th>
+                <th>Credit (QAR)</th>
+            </tr>
+        </thead>
+        <tbody id="rp-table-body"></tbody>
+    </table>
+    <div id="rp-summary" style="margin-top: 25px; text-align: right; border-top: 2px solid #0f6e56; padding-top: 10px;"></div>
+    <p style="font-size: 10px; color: #666; margin-top: 40px; text-align: center;">This is a computer-generated document. No signature required.</p>
+</div>
+
+<div id="login-screen" class="no-print" style="position:fixed; inset:0; background:var(--p); z-index:9999; display:flex; align-items:center; justify-content:center;">
     <div style="background:white; padding:30px; border-radius:15px; width:90%; max-width:320px; text-align:center;">
         <h2 style="color:var(--p); margin-top:0;">DTT AZIZIYA</h2>
         <input type="text" id="l-user" placeholder="Username">
@@ -71,40 +98,45 @@
 
     <div id="pg-dash" class="pg" style="display:block">
         <div class="stats">
-            <div class="card"><h2 id="st-total" style="color:var(--p); margin:0;">0.00</h2><small>Total Debt</small></div>
-            <div class="card"><h2 id="st-count" style="margin:0;">0</h2><small>Clients</small></div>
+            <div class="card"><h2 id="st-total" style="color:var(--err); margin:0;">0.00</h2><small>Total Outstanding</small></div>
+            <div class="card"><h2 id="st-count" style="margin:0;">0</h2><small>Registered Clients</small></div>
         </div>
-        <button class="btn btn-p" onclick="openM('cust')" style="padding:15px;">+ Register New Customer</button>
-        <button class="btn btn-outline" onclick="pullData()" style="margin-top:10px;">🔄 Refresh Cloud Data</button>
+        <button class="btn btn-p" onclick="openM('cust')" style="padding:15px; margin-bottom:10px;">+ Register New Customer</button>
+        <button class="btn btn-outline" onclick="pullData()" style="padding:15px;">🔄 Refresh Cloud Data</button>
     </div>
 
     <div id="pg-cust" class="pg">
-        <input type="text" placeholder="Search by name..." onkeyup="search(this.value)">
+        <input type="text" placeholder="Search by name or phone..." onkeyup="search(this.value)">
         <div id="clist"></div>
     </div>
 
     <div id="pg-rep" class="pg">
         <div class="card" style="text-align:left">
-            <h3>Monthly Report</h3>
+            <h3>Monthly Business Summary</h3>
             <input type="month" id="rep-month" onchange="genReport()">
-            <div id="rep-results" style="display:none; margin-top:15px;">
-                <p>Dues Given: <b id="rep-out" style="color:var(--err)"></b></p>
-                <p>Cash Received: <b id="rep-in" style="color:var(--p)"></b></p>
+            <div id="rep-results" style="display:none; margin-top:15px; padding:15px; background:#f8fafc; border-radius:8px;">
+                <p>Total Dues Issued: <b id="rep-out" style="color:var(--err); float:right;"></b></p>
+                <hr style="border:0; border-top:1px solid #e2e8f0;">
+                <p>Total Cash Received: <b id="rep-in" style="color:var(--success); float:right;"></b></p>
             </div>
         </div>
     </div>
 
     <div id="pg-sett" class="pg">
         <div class="card" style="text-align:left; margin-bottom:15px;">
-            <h3>Staff List</h3>
+            <h3>System Users</h3>
             <div id="ulist"></div>
-            <hr>
-            <input type="text" id="nu-name" placeholder="Staff Name">
-            <input type="text" id="nu-user" placeholder="Username">
-            <input type="text" id="nu-pass" placeholder="Password">
-            <button class="btn btn-p" onclick="addUser()">Add Staff</button>
+            
+            <div id="admin-staff-controls" style="display:none;">
+                <hr>
+                <h4 style="margin-bottom:10px;">Add New Staff</h4>
+                <input type="text" id="nu-name" placeholder="Staff Name">
+                <input type="text" id="nu-user" placeholder="Username">
+                <input type="text" id="nu-pass" placeholder="Password">
+                <button class="btn btn-p" onclick="addUser()">Add Staff</button>
+            </div>
         </div>
-        <button class="btn btn-d" onclick="wipeSystem()">Wipe System</button>
+        <button id="btn-wipe" class="btn btn-d" style="display:none;" onclick="wipeSystem()">Wipe System Data</button>
     </div>
 </div>
 
@@ -115,7 +147,7 @@
     <input type="text" id="nc-nation" placeholder="Nationality">
     <input type="text" id="nc-id" placeholder="QID">
     <button class="btn btn-p" onclick="saveCust()">Save</button>
-    <button class="btn" onclick="closeM('cust')">Cancel</button>
+    <button class="btn" style="margin-top:10px; background:#e2e8f0;" onclick="closeM('cust')">Cancel</button>
 </div></div>
 
 <div id="m-txn" class="modal"><div class="modal-box">
@@ -125,17 +157,19 @@
     <select id="tx-pay" style="display:none"><option>Cash</option><option>Card</option></select>
     <input type="date" id="tx-date">
     <button id="tx-btn" class="btn btn-p" onclick="processTxn()">Save</button>
-    <button class="btn" onclick="closeM('txn')">Cancel</button>
+    <button class="btn" style="margin-top:10px; background:#e2e8f0;" onclick="closeM('txn')">Cancel</button>
 </div></div>
 
 <script>
     const CLOUD_URL = 'https://script.google.com/macros/s/AKfycbwwL7UvDDb1vb9NdQjceefNPab9Cbnmk-aoYUaOYLF1Wj6j_TwhwBEDvK37KA8rwUMlvg/exec';
-    let db = { c: [], u: [{n: 'Admin', u: 'admin', p: '123456'}] };
+    
+    // Updated Admin Password to 123455
+    let db = { c: [], u: [{n: 'Admin', u: 'admin', p: '123455'}] };
     let currentUser = "Admin";
+    let currentUsername = "admin"; 
     let actCid = null;
     let currentType = 'due';
 
-    // 1. CLOUD SYNC LOGIC
     async function pushData() {
         document.getElementById('sync-indicator').innerText = "Syncing...";
         try {
@@ -158,20 +192,32 @@
             const data = await res.json();
             if (data && data.u) {
                 db = data;
+                // Force update admin password in local state if cloud has old one
+                const adminObj = db.u.find(u => u.u === 'admin');
+                if(adminObj) adminObj.p = '123455';
                 render();
             }
         } catch (e) { console.log("Offline mode"); }
     }
 
-    // 2. CORE FUNCTIONS
     function login() {
         const u = document.getElementById('l-user').value;
         const p = document.getElementById('l-pass').value;
         const user = db.u.find(x => x.u === u && x.p === p);
         if(user) {
             currentUser = user.n;
+            currentUsername = user.u;
+            
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('app').style.display = 'block';
+            
+            if(currentUsername === 'admin') {
+                document.getElementById('admin-staff-controls').style.display = 'block';
+                document.getElementById('btn-wipe').style.display = 'block';
+            } else {
+                document.getElementById('admin-staff-controls').style.display = 'none';
+                document.getElementById('btn-wipe').style.display = 'none';
+            }
             pullData().then(render);
         } else {
             document.getElementById('l-err').innerText = "Login Failed";
@@ -180,6 +226,7 @@
 
     function page(p) {
         document.querySelectorAll('.pg').forEach(x => x.style.display = x.id === 'pg-'+p ? 'block' : 'none');
+        document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.getAttribute('onclick').includes(p)));
     }
 
     function openM(id, cid = null) { actCid = cid; document.getElementById('m-'+id).style.display='flex'; }
@@ -200,69 +247,141 @@
 
     function openTxn(type, cid) {
         currentType = type;
-        document.getElementById('txn-head').innerText = type === 'due' ? 'Add Due' : 'Receive Payment';
+        document.getElementById('txn-head').innerText = type === 'due' ? 'Add Due Amount' : 'Receive Payment';
         document.getElementById('tx-pay').style.display = type === 'pay' ? 'block' : 'none';
         document.getElementById('tx-date').value = new Date().toISOString().split('T')[0];
+        document.getElementById('tx-btn').className = type === 'due' ? 'btn btn-d' : 'btn btn-p';
         openM('txn', cid);
     }
 
     function processTxn() {
         const amt = parseFloat(document.getElementById('tx-amt').value);
+        if(!amt) return alert("Please enter an amount");
         const c = db.c.find(x => x.id === actCid);
         const time = new Date().toLocaleString('en-GB', { hour12: true });
 
         c.bal += (currentType === 'due' ? amt : -amt);
         c.h.push({
             d: document.getElementById('tx-date').value,
-            desc: document.getElementById('tx-desc').value || (currentType==='due'?'Items':'Payment'),
+            desc: document.getElementById('tx-desc').value || (currentType==='due'?'Items/Service':'Payment'),
             t: currentType === 'due' ? 'DEBIT' : 'CREDIT',
             a: amt,
-            s: currentUser, // Tracks WHO edited
-            ts: time       // Tracks WHEN edited
+            s: currentUser,
+            ts: time
         });
 
+        document.getElementById('tx-amt').value = "";
+        document.getElementById('tx-desc').value = "";
         pushData(); render(); closeM('txn');
     }
 
+    function generateIndividualPDF(cid) {
+        const c = db.c.find(x => x.id === cid);
+        if(!c) return;
+
+        document.getElementById('rp-cust-info').innerHTML = `
+            <b>Customer:</b> ${c.n} <br>
+            <b>Mobile:</b> ${c.ph} <br>
+            <b>Nationality:</b> ${c.na} | <b>ID/QID:</b> ${c.idno || 'N/A'} <br>
+            <b>Statement Date:</b> ${new Date().toLocaleDateString()}
+        `;
+
+        document.getElementById('rp-table-body').innerHTML = c.h.map(h => `
+            <tr>
+                <td>${h.d}</td>
+                <td>${h.desc}</td>
+                <td style="color:red">${h.t==='DEBIT' ? h.a.toFixed(2) : '-'}</td>
+                <td style="color:green">${h.t==='CREDIT' ? h.a.toFixed(2) : '-'}</td>
+            </tr>
+        `).join('');
+
+        document.getElementById('rp-summary').innerHTML = `
+            <h3 style="margin:0; color:${c.bal > 0 ? '#dc2626' : '#16a34a'}">Total Balance: QAR ${c.bal.toFixed(2)}</h3>
+        `;
+        window.print();
+    }
+
+    function sendWhatsAppReport(cid) {
+        const c = db.c.find(x => x.id === cid);
+        if(!c) return;
+        let msg = `*DTT Aziziya - Account Statement*\nCustomer: ${c.n}\nBalance: *QAR ${c.bal.toFixed(2)}*\n\n*Recent Transactions:*\n`;
+        c.h.slice(-5).forEach(h => {
+            msg += `${h.d}: ${h.desc} - QAR ${h.a} (${h.t})\n`;
+        });
+        let phone = c.ph.replace(/\D/g, '');
+        if(phone.length === 8) phone = '974' + phone;
+        window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+    }
+
     function render() {
-        document.getElementById('clist').innerHTML = db.c.map(c => `
-            <div class="cust-row">
+        document.getElementById('clist').innerHTML = db.c.map(c => {
+            let balColor = c.bal > 0 ? 'var(--err)' : 'var(--success)';
+            return `
+            <div class="cust-row" style="border-left-color: ${balColor}">
                 <div class="cust-top" onclick="this.parentElement.classList.toggle('open')">
                     <div><b>${c.n}</b><br><small>${c.ph}</small></div>
-                    <div style="color:var(--err); font-weight:bold;">QAR ${c.bal.toFixed(2)}</div>
+                    <div style="color:${balColor}; font-weight:bold;">QAR ${c.bal.toFixed(2)}</div>
                 </div>
                 <div class="cust-body">
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px;">
                         <button class="btn btn-d" onclick="openTxn('due', ${c.id})">Add Due</button>
-                        <button class="btn btn-p" onclick="openTxn('pay', ${c.id})">Payment</button>
+                        <button class="btn btn-p" style="background:var(--success)" onclick="openTxn('pay', ${c.id})">Payment</button>
                     </div>
-                    <table width="100%" style="font-size:11px; margin-top:10px; border-collapse:collapse;">
-                        <tr style="background:#eee"><th>Date</th><th>Info</th><th>Amt</th><th>Editor</th></tr>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px;">
+                        <button class="btn btn-s" onclick="generateIndividualPDF(${c.id})">📄 PDF Report</button>
+                        <button class="btn btn-wa" onclick="sendWhatsAppReport(${c.id})">💬 WhatsApp</button>
+                    </div>
+                    <table width="100%" style="font-size:11px; border-collapse:collapse; background:white;">
+                        <tr style="background:#f8fafc; border-bottom:1px solid #e2e8f0;">
+                            <th style="padding:8px; text-align:left;">Date</th>
+                            <th style="text-align:right;">Amt</th>
+                            <th style="text-align:center;">Staff</th>
+                        </tr>
                         ${c.h.map(h => `
-                            <tr style="border-bottom:1px solid #ddd">
-                                <td>${h.d}</td>
-                                <td>${h.desc}</td>
-                                <td>${h.a}</td>
-                                <td style="color:var(--p)">${h.s}<br><span style="font-size:9px; color:#999">${h.ts}</span></td>
+                            <tr style="border-bottom:1px solid #e2e8f0">
+                                <td style="padding:8px;">${h.d}</td>
+                                <td style="text-align:right; font-weight:bold; color:${h.t==='DEBIT'?'var(--err)':'var(--success)'}">${h.a}</td>
+                                <td style="text-align:center; color:var(--p)">${h.s}</td>
                             </tr>
                         `).join('')}
                     </table>
                 </div>
-            </div>
-        `).join('');
-        
+            </div>`
+        }).join('');
         document.getElementById('st-total').innerText = db.c.reduce((s,x)=>s+x.bal,0).toFixed(2);
         document.getElementById('st-count').innerText = db.c.length;
-        document.getElementById('ulist').innerHTML = db.u.map(u => `<div>• ${u.n} (${u.u})</div>`).join('');
+        document.getElementById('ulist').innerHTML = db.u.map(u => `<div style="padding:5px 0; border-bottom:1px solid #eee;">• <b>${u.n}</b> (${u.u})</div>`).join('');
+    }
+
+    function genReport() {
+        const monthVal = document.getElementById('rep-month').value;
+        if(!monthVal) return;
+        let out = 0, inc = 0;
+        db.c.forEach(c => {
+            c.h.forEach(txn => {
+                if(txn.d.startsWith(monthVal)) {
+                    if(txn.t === 'DEBIT') out += txn.a;
+                    if(txn.t === 'CREDIT') inc += txn.a;
+                }
+            });
+        });
+        document.getElementById('rep-results').style.display = 'block';
+        document.getElementById('rep-out').innerText = "QAR " + out.toFixed(2);
+        document.getElementById('rep-in').innerText = "QAR " + inc.toFixed(2);
     }
 
     function addUser() {
-        db.u.push({
-            n: document.getElementById('nu-name').value, 
-            u: document.getElementById('nu-user').value, 
-            p: document.getElementById('nu-pass').value
-        });
-        pushData(); render();
+        if(currentUsername !== 'admin') return; 
+        const n = document.getElementById('nu-name').value;
+        const u = document.getElementById('nu-user').value;
+        const p = document.getElementById('nu-pass').value;
+        if(n && u && p) {
+            db.u.push({ n, u, p });
+            pushData(); render();
+            document.getElementById('nu-name').value = '';
+            document.getElementById('nu-user').value = '';
+            document.getElementById('nu-pass').value = '';
+        }
     }
 
     function search(q) {
@@ -273,13 +392,16 @@
     }
 
     function wipeSystem() {
-        if(confirm("Wipe everything?")) {
-            db = { c: [], u: [{n: 'Admin', u: 'admin', p: '123456'}] };
+        if(currentUsername !== 'admin') {
+            alert("Security Alert: Only Admin can perform this action.");
+            return;
+        }
+        if(confirm("DANGER: This will delete all customers and history permanently! Continue?")) {
+            db = { c: [], u: [{n: 'Admin', u: 'admin', p: '123455'}] };
             pushData(); location.reload();
         }
     }
 
-    // Init
     window.onload = pullData;
 </script>
 </body>
