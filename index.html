@@ -3,20 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DTT - Aziziya System</title>
+    <title>DTT - Aziziya Cloud Sync</title>
     <style>
         :root { --p: #0f6e56; --s: #d4af37; --bg: #f1f5f9; --txt: #1e293b; --err: #be123c; --success: #16a34a; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; color: var(--txt); }
         
         @media print {
-            .no-print, .nav { display: none !important; }
+            .no-print, .nav, .action-btns { display: none !important; }
             .print-only { display: block !important; padding: 20px; }
             table { width: 100%; border-collapse: collapse; border: 1px solid #000; }
             th, td { border: 1px solid #000; padding: 10px; text-align: left; }
         }
         .print-only { display: none; }
 
-        .header { background: var(--p); color: white; padding: 20px; text-align: center; border-bottom: 5px solid var(--s); }
+        .header { background: var(--p); color: white; padding: 20px; text-align: center; border-bottom: 5px solid var(--s); position: relative; }
+        .sync-status { position: absolute; top: 10px; right: 10px; font-size: 10px; padding: 4px 8px; border-radius: 4px; background: rgba(0,0,0,0.2); }
+        
         .nav { display: flex; background: white; border-bottom: 1px solid #ddd; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .tab { flex: 1; padding: 15px 5px; text-align: center; cursor: pointer; font-weight: bold; font-size: 12px; border-bottom: 3px solid transparent; }
         .tab.active { color: var(--p); border-bottom: 3px solid var(--p); background: #f8fafc; }
@@ -30,19 +32,20 @@
         .cust-body { display: none; padding: 15px; border-top: 1px solid #f1f5f9; background: #fafafa; }
         .open .cust-body { display: block; }
 
-        input, select { width: 100%; padding: 12px; margin: 6px 0 12px 0; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
+        input, select, textarea { width: 100%; padding: 12px; margin: 6px 0 12px 0; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
         .btn { border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; font-size: 14px; transition: 0.2s; }
         .btn-p { background: var(--p); color: white; }
         .btn-d { background: var(--err); color: white; }
-        .btn-s { background: var(--s); color: white; }
         .btn-outline { background: white; color: var(--p); border: 2px solid var(--p); }
+        .tool-btn { background: none; border: none; cursor: pointer; font-size: 14px; padding: 0 4px; }
         
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 15px; }
         .modal-box { background: white; padding: 25px; border-radius: 15px; width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto; }
         
         table { width: 100%; border-collapse: collapse; font-size: 11px; }
         th { background: #f8fafc; padding: 8px; text-align: left; border-bottom: 1px solid #e2e8f0; }
-        td { padding: 8px; border-bottom: 1px solid #e2e8f0; }
+        td { padding: 8px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+        .edit-tag { font-size: 9px; color: #94a3b8; display: block; margin-top: 2px; font-style: italic; }
 
         .admin-only { display: none; }
     </style>
@@ -55,124 +58,153 @@
         <input type="text" id="l-user" placeholder="Username">
         <input type="password" id="l-pass" placeholder="Password">
         <button class="btn btn-p" onclick="login()">Access System</button>
-        <p id="l-err" style="color:red; font-size:12px; margin-top:10px; height:15px;"></p>
+        <p id="l-err" style="color:red; font-size:11px; margin-top:10px;"></p>
     </div>
-</div>
-
-<div id="print-view" class="print-only">
-    <center>
-        <h1>Doha Technical Trading W.L.L</h1>
-        <p>Aziziya Branch | Contact: 66682315</p>
-        <hr>
-        <h2>STATEMENT OF ACCOUNT</h2>
-    </center>
-    <div id="p-info" style="margin:20px 0; font-size:16px;"></div>
-    <table id="p-table">
-        <thead><tr><th>Date</th><th>Description</th><th>Debit (QAR)</th><th>Credit (QAR)</th></tr></thead>
-        <tbody id="p-tbody"></tbody>
-    </table>
-    <h3 id="p-total" style="text-align:right; margin-top:25px; width:100%;"></h3>
 </div>
 
 <div id="app" class="no-print" style="display:none">
     <div class="header">
-        <h1 style="margin:0; font-size:20px;">Doha Technical Trading W.L.L</h1>
-        <p style="margin:5px 0 0; font-size:13px; opacity:0.9;">Aziziya Branch | Mobile: 66682315</p>
+        <div id="sync-indicator" class="sync-status">Connecting...</div>
+        <h1 style="margin:0; font-size:20px;">Doha Technical Trading</h1>
+        <p style="margin:5px 0 0; font-size:12px; opacity:0.8;">Cloud-Linked Management</p>
     </div>
 
     <div class="nav">
         <div class="tab active" onclick="page('dash')">Dashboard</div>
         <div class="tab" onclick="page('cust')">Customers</div>
-        <div class="tab" onclick="page('hist')">History</div>
-        <div class="tab" onclick="page('rep')">Reports</div>
+        <div class="tab" onclick="page('hist')">Activity Log</div>
         <div class="tab" onclick="page('sett')">Settings</div>
     </div>
 
     <div id="pg-dash" class="pg" style="display:block">
         <div class="stats">
-            <div class="card"><h2 id="st-total" style="color:var(--p); margin:0;">0.00</h2><small>Total Debt</small></div>
-            <div class="card"><h2 id="st-count" style="margin:0;">0</h2><small>Clients</small></div>
+            <div class="card"><h2 id="st-total" style="color:var(--p); margin:0;">0.00</h2><small>Total Outstanding</small></div>
+            <div class="card"><h2 id="st-count" style="margin:0;">0</h2><small>Total Clients</small></div>
         </div>
         <button class="btn btn-p" onclick="openM('cust')" style="padding:15px;">+ Register New Customer</button>
     </div>
 
     <div id="pg-cust" class="pg">
-        <input type="text" placeholder="Search name or phone..." onkeyup="search(this.value)">
+        <input type="text" placeholder="Search by name or phone..." onkeyup="search(this.value)">
         <div id="clist"></div>
     </div>
 
     <div id="pg-hist" class="pg">
         <div class="card" style="text-align:left">
-            <h3>Recent Activity (All Records)</h3>
+            <h3>Recent Transactions</h3>
             <table>
-                <thead><tr><th>Date</th><th>Customer</th><th>Info</th><th>Amount</th></tr></thead>
+                <thead><tr><th>Issue Date</th><th>Customer</th><th>Details</th><th>Amt</th><th>Action</th></tr></thead>
                 <tbody id="full-history-body"></tbody>
             </table>
         </div>
     </div>
 
-    <div id="pg-rep" class="pg">
-        <div class="card" style="text-align:left">
-            <h3>Business Summary</h3>
-            <input type="month" id="rep-month" onchange="genReport()">
-            <div id="rep-results" style="display:none; margin-top:15px;">
-                <p>New Dues Issued: <b id="rep-out" style="color:var(--err); float:right;"></b></p>
-                <p>Payments Received: <b id="rep-in" style="color:var(--success); float:right;"></b></p>
-                <hr>
-                <h4 style="margin-bottom:5px">New Customers this Month:</h4>
-                <div id="rep-new-cust" style="font-size:12px; color:#666"></div>
-                <h4 style="margin:15px 0 5px">Settled Accounts this Month:</h4>
-                <div id="rep-settled-cust" style="font-size:12px; color:#666"></div>
-            </div>
-        </div>
-    </div>
-
     <div id="pg-sett" class="pg">
+        <div class="card" style="text-align:left; margin-bottom:15px;">
+            <h3>Cloud Connection</h3>
+            <p style="font-size:12px; color:#666">Status: <span id="conn-status" style="font-weight:bold">Linked to Google Sheets</span></p>
+            <button class="btn btn-outline" onclick="loadFromCloud()">Force Refresh from Cloud</button>
+        </div>
         <div class="card" style="text-align:left; margin-bottom:15px;">
             <h3>Staff Management</h3>
             <div id="ulist"></div>
             <div class="admin-only">
                 <input type="text" id="nu-name" placeholder="Staff Name">
-                <input type="text" id="nu-user" placeholder="Login Username">
-                <input type="text" id="nu-pass" placeholder="Login Password">
-                <button class="btn btn-p" onclick="addUser()">Create Staff</button>
+                <input type="text" id="nu-user" placeholder="Username">
+                <input type="text" id="nu-pass" placeholder="Password">
+                <button class="btn btn-p" onclick="addUser()">Add Staff</button>
             </div>
         </div>
-        <div class="card admin-only" style="text-align:left; border-top:3px solid var(--err)">
-            <h3 style="color:var(--err)">Danger Zone</h3>
-            <button class="btn btn-d" onclick="wipeSystem()">Wipe All Data Permanently</button>
+        <div class="card admin-only" style="border-top:3px solid var(--err); text-align:left;">
+            <h3 style="color:var(--err)">Advanced</h3>
+            <button class="btn btn-d" onclick="wipeSystem()">Format Data</button>
         </div>
     </div>
 </div>
 
 <div id="m-cust" class="modal"><div class="modal-box">
-    <h3>New Customer</h3>
+    <h3>Customer Enrollment</h3>
     <input type="text" id="nc-name" placeholder="Full Name">
-    <input type="text" id="nc-phone" placeholder="Mobile">
-    <input type="text" id="nc-nation" placeholder="Nationality">
-    <input type="text" id="nc-id" placeholder="QID / Passport">
-    <button class="btn btn-p" onclick="saveCust()">Save Profile</button>
+    <input type="text" id="nc-phone" placeholder="Mobile Number">
+    <textarea id="nc-desc" placeholder="Customer Notes/Identity Info"></textarea>
+    <button class="btn btn-p" onclick="saveCust()">Register</button>
     <button class="btn" style="margin-top:10px" onclick="closeM('cust')">Cancel</button>
 </div></div>
 
 <div id="m-txn" class="modal"><div class="modal-box">
     <h3 id="txn-head">Transaction</h3>
-    <input type="text" id="tx-desc" placeholder="Description">
-    <input type="number" id="tx-amt" placeholder="Amount (QAR)">
-    <select id="tx-pay" style="display:none"><option>Cash</option><option>Card</option></select>
+    <label>Amount (QAR)</label>
+    <input type="number" id="tx-amt" placeholder="0.00">
+    <label>Description</label>
+    <textarea id="tx-desc" placeholder="Details..."></textarea>
+    <label>Issue Date</label>
     <input type="date" id="tx-date">
     <button id="tx-btn" class="btn"></button>
     <button class="btn" style="margin-top:10px" onclick="closeM('txn')">Cancel</button>
 </div></div>
 
+<div id="m-edit" class="modal"><div class="modal-box">
+    <h3>Modify Record</h3>
+    <label>Issue Date</label>
+    <input type="date" id="ed-date">
+    <label>Amount (QAR)</label>
+    <input type="number" id="ed-amt">
+    <label>Description</label>
+    <textarea id="ed-desc"></textarea>
+    <button class="btn btn-p" onclick="processEdit()">Save Changes</button>
+    <button class="btn" style="margin-top:10px" onclick="closeM('edit')">Cancel</button>
+</div></div>
+
 <script>
-    const DB_KEY = 'dtt_ultimate_v2';
-    // Admin password updated to 123455
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwwL7UvDDb1vb9NdQjceefNPab9Cbnmk-aoYUaOYLF1Wj6j_TwhwBEDvK37KA8rwUMlvg/exec'; 
+    const DB_KEY = 'dtt_cloud_sync_final';
+    
     let db = JSON.parse(localStorage.getItem(DB_KEY)) || { c: [], u: [{n: 'Admin', u: 'admin', p: '123455'}] };
-    let currentUser = "Admin", currentUsername = "admin", actCid = null;
+    let currentUser = "Admin", currentUsername = "admin", actCid = null, actTxId = null;
     const todayStr = new Date().toISOString().split('T')[0];
 
-    function save() { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
+    async function syncToCloud() {
+        const indicator = document.getElementById('sync-indicator');
+        indicator.innerText = "☁ Syncing...";
+        indicator.style.color = "orange";
+        try {
+            await fetch(WEB_APP_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(db)
+            });
+            indicator.innerText = "☁ Cloud Updated";
+            indicator.style.color = "white";
+        } catch (e) {
+            indicator.innerText = "⚠ Offline Mode";
+            indicator.style.color = "red";
+        }
+    }
+
+    async function loadFromCloud() {
+        const indicator = document.getElementById('sync-indicator');
+        indicator.innerText = "☁ Pulling Data...";
+        try {
+            const response = await fetch(WEB_APP_URL);
+            const cloudData = await response.json();
+            if (cloudData && cloudData.c) {
+                db = cloudData;
+                localStorage.setItem(DB_KEY, JSON.stringify(db));
+                render();
+                indicator.innerText = "☁ Cloud Connected";
+                indicator.style.color = "white";
+            }
+        } catch (e) {
+            console.log("Using local copy");
+            indicator.innerText = "☁ Local Cache";
+        }
+    }
+
+    function save() { 
+        localStorage.setItem(DB_KEY, JSON.stringify(db)); 
+        syncToCloud(); 
+    }
 
     function login() {
         const u = document.getElementById('l-user').value, p = document.getElementById('l-pass').value;
@@ -182,8 +214,9 @@
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('app').style.display = 'block';
             if(currentUsername === 'admin') document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'block');
+            loadFromCloud();
             render();
-        } else { document.getElementById('l-err').innerText = "Wrong Password"; }
+        } else { document.getElementById('l-err').innerText = "Access Denied."; }
     }
 
     function page(p) {
@@ -196,96 +229,84 @@
     function closeM(id) { document.getElementById('m-'+id).style.display='none'; }
 
     function saveCust() {
-        db.c.push({ id: Date.now(), n: document.getElementById('nc-name').value, ph: document.getElementById('nc-phone').value, na: document.getElementById('nc-nation').value, idno: document.getElementById('nc-id').value, bal: 0, h: [] });
+        db.c.push({ id: Date.now(), n: document.getElementById('nc-name').value, ph: document.getElementById('nc-phone').value, desc: document.getElementById('nc-desc').value, bal: 0, h: [] });
         save(); closeM('cust'); render();
     }
 
     function openTxn(type, cid) {
-        document.getElementById('txn-head').innerText = type === 'due' ? 'Add Due Amount' : 'Receive Payment';
+        document.getElementById('txn-head').innerText = type === 'due' ? 'Record Due' : 'Record Payment';
         document.getElementById('tx-date').value = todayStr;
-        document.getElementById('tx-btn').innerText = 'Save Entry';
+        document.getElementById('tx-btn').innerText = 'Save Record';
         document.getElementById('tx-btn').className = type === 'due' ? 'btn btn-d' : 'btn btn-p';
-        document.getElementById('tx-pay').style.display = type === 'pay' ? 'block' : 'none';
         document.getElementById('tx-btn').onclick = () => processTxn(type);
         openM('txn', cid);
     }
 
-    function processTxn(type, forceAmt = null, forceDesc = null) {
-        const amt = forceAmt || parseFloat(document.getElementById('tx-amt').value);
+    function processTxn(type) {
+        const amt = parseFloat(document.getElementById('tx-amt').value);
         const c = db.c.find(x => x.id === actCid);
         if(!amt) return;
-        
-        c.bal += (type === 'due' ? amt : -amt);
         c.h.push({ 
+            id: Date.now(), 
             d: document.getElementById('tx-date').value || todayStr, 
-            desc: forceDesc || document.getElementById('tx-desc').value || (type==='due'?'Service':'Payment'), 
-            t: type === 'due' ? 'DEBIT' : 'CREDIT', a: amt, s: currentUser 
+            desc: document.getElementById('tx-desc').value || (type==='due'?'Items/Repair':'Cash Payment'), 
+            t: type === 'due' ? 'DEBIT' : 'CREDIT', 
+            a: amt, 
+            s: currentUser 
         });
-        save(); closeM('txn'); render();
+        recalcBalance(c); save(); closeM('txn'); render();
         document.getElementById('tx-amt').value = ''; document.getElementById('tx-desc').value = '';
     }
 
-    function settleCustomer(cid) {
+    function recalcBalance(customer) {
+        customer.bal = customer.h.reduce((sum, h) => sum + (h.t === 'DEBIT' ? h.a : -h.a), 0);
+    }
+
+    function openEdit(cid, txId) {
+        actCid = cid; actTxId = txId;
         const c = db.c.find(x => x.id === cid);
-        if(c.bal <= 0) return alert("Account is already 0");
-        if(confirm(`Settle full balance of QAR ${c.bal.toFixed(2)} for ${c.n}?`)) {
-            actCid = cid;
-            processTxn('pay', c.bal, "Full Settlement");
-        }
+        const tx = c.h.find(h => h.id === txId);
+        document.getElementById('ed-date').value = tx.d;
+        document.getElementById('ed-amt').value = tx.a;
+        document.getElementById('ed-desc').value = tx.desc;
+        openM('edit');
     }
 
-    function deleteCustomer(cid) {
-        if(currentUsername !== 'admin') return alert("Only Admin can delete customers");
-        if(confirm("Delete this customer and all history permanently?")) {
-            db.c = db.c.filter(x => x.id !== cid);
-            save(); render();
-        }
+    function processEdit() {
+        const c = db.c.find(x => x.id === actCid);
+        const tx = c.h.find(h => h.id === actTxId);
+        tx.d = document.getElementById('ed-date').value;
+        tx.a = parseFloat(document.getElementById('ed-amt').value);
+        tx.desc = document.getElementById('ed-desc').value;
+        tx.eb = currentUser; 
+        tx.et = new Date().toLocaleString('en-GB', { hour12: true });
+        recalcBalance(c); save(); closeM('edit'); render(); renderHistory();
     }
 
-    function deleteStaff(user) {
-        if(user === 'admin') return alert("Cannot delete main Admin");
-        if(confirm(`Delete staff member ${user}?`)) {
-            db.u = db.u.filter(x => x.u !== user);
-            save(); render();
+    function undoTxn(cid, txId) {
+        if(confirm("Confirm: Delete this entry permanently?")) {
+            const c = db.c.find(x => x.id === cid);
+            c.h = c.h.filter(h => h.id !== txId);
+            recalcBalance(c); save(); render(); renderHistory();
         }
     }
 
     function renderHistory() {
         let all = [];
-        db.c.forEach(c => c.h.forEach(h => all.push({...h, cn: c.n})));
-        all.sort((a,b) => new Date(b.d) - new Date(a.d));
-        document.getElementById('full-history-body').innerHTML = all.slice(0, 50).map(h => `
-            <tr><td>${h.d}</td><td>${h.cn}</td><td>${h.desc}</td><td style="color:${h.t==='DEBIT'?'red':'green'}">${h.a.toFixed(2)}</td></tr>
+        db.c.forEach(c => c.h.forEach(h => all.push({...h, cid: c.id, cn: c.n})));
+        all.sort((a,b) => b.id - a.id);
+        document.getElementById('full-history-body').innerHTML = all.slice(0, 60).map(h => `
+            <tr>
+                <td>${h.d}</td>
+                <td><b>${h.cn}</b></td>
+                <td>${h.desc} ${h.eb ? `<span class="edit-tag">Edited by ${h.eb} @ ${h.et}</span>` : ''}</td>
+                <td style="color:${h.t==='DEBIT'?'red':'green'}">${h.a.toFixed(2)}</td>
+                <td>
+                    <button class="tool-btn" onclick="openEdit(${h.cid}, ${h.id})">✏️</button>
+                    <button class="tool-btn" style="color:red" onclick="undoTxn(${h.cid}, ${h.id})">🗑️</button>
+                </td>
+            </tr>
         `).join('');
-    }
-
-    function genReport() {
-        const month = document.getElementById('rep-month').value;
-        let out = 0, inc = 0, news = [], settled = [];
-        db.c.forEach(c => {
-            let hadDebt = false, paidOff = false;
-            c.h.forEach(h => {
-                if(h.d.startsWith(month)) {
-                    if(h.t === 'DEBIT') { out += h.a; hadDebt = true; }
-                    if(h.t === 'CREDIT') inc += h.a;
-                }
-            });
-            if(hadDebt) news.push(c.n);
-            if(c.bal <= 0 && c.h.some(h => h.d.startsWith(month) && h.t === 'CREDIT')) settled.push(c.n);
-        });
-        document.getElementById('rep-results').style.display = 'block';
-        document.getElementById('rep-out').innerText = "QAR " + out.toFixed(2);
-        document.getElementById('rep-in').innerText = "QAR " + inc.toFixed(2);
-        document.getElementById('rep-new-cust').innerText = news.length ? news.join(", ") : "None";
-        document.getElementById('rep-settled-cust').innerText = settled.length ? settled.join(", ") : "None";
-    }
-
-    function printR(cid) {
-        const c = db.c.find(x => x.id === cid);
-        document.getElementById('p-info').innerHTML = `<b>Customer:</b> ${c.n} <br><b>Mobile:</b> ${c.ph}<br><b>ID:</b> ${c.idno}`;
-        document.getElementById('p-tbody').innerHTML = c.h.map(h => `<tr><td>${h.d}</td><td>${h.desc}</td><td>${h.t==='DEBIT'?h.a.toFixed(2):'-'}</td><td>${h.t==='CREDIT'?h.a.toFixed(2):'-'}</td></tr>`).join('');
-        document.getElementById('p-total').innerText = "Total Outstanding Balance: QAR " + c.bal.toFixed(2);
-        window.print();
     }
 
     function render() {
@@ -296,30 +317,21 @@
                     <div style="color:var(--err); font-weight:800;">QAR ${c.bal.toFixed(2)}</div>
                 </div>
                 <div class="cust-body">
+                    <p style="font-size:11px; color:#666">Notes: ${c.desc || '-'}</p>
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
-                        <button class="btn btn-d" onclick="openTxn('due', ${c.id})">Add Due</button>
-                        <button class="btn btn-p" onclick="openTxn('pay', ${c.id})">Payment</button>
+                        <button class="btn btn-d" onclick="openTxn('due', ${c.id})">+ Add Due</button>
+                        <button class="btn btn-p" onclick="openTxn('pay', ${c.id})">+ Payment</button>
                     </div>
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
-                        <button class="btn btn-outline" onclick="settleCustomer(${c.id})">✔ Settle Account</button>
-                        <button class="btn btn-s" onclick="printR(${c.id})">📄 Print PDF</button>
-                    </div>
-                    <button class="btn btn-d admin-only" style="width:100%; margin-bottom:15px; opacity:0.6" onclick="deleteCustomer(${c.id})">🗑 Delete Profile</button>
-                    <table>
-                        ${c.h.slice(-10).map(h => `<tr><td>${h.d}</td><td>${h.desc}</td><td align="right"><b>${h.a.toFixed(2)}</b></td><td align="right" style="color:var(--s)">${h.s}</td></tr>`).join('')}
+                    <table style="background:white; border-radius:5px;">
+                        ${c.h.slice(-3).map(h => `<tr><td>${h.d}</td><td>${h.desc}</td><td align="right"><b>${h.a.toFixed(2)}</b></td></tr>`).join('')}
                     </table>
+                    <button class="btn btn-outline" style="margin-top:10px; padding:6px; font-size:12px" onclick="page('hist')">View Full Details</button>
                 </div>
             </div>
         `).join('');
-        document.getElementById('ulist').innerHTML = db.u.map(u => `
-            <div style="padding:10px; background:white; margin-bottom:5px; border-radius:5px; display:flex; justify-content:space-between; align-items:center;">
-                <span><b>${u.n}</b> (${u.u})</span>
-                ${currentUsername === 'admin' ? `<button class="btn btn-d" style="width:auto; padding:5px 10px;" onclick="deleteStaff('${u.u}')">Remove</button>` : ''}
-            </div>
-        `).join('');
+        document.getElementById('ulist').innerHTML = db.u.map(u => `<div style="padding:10px; border-bottom:1px solid #eee;">${u.n} (${u.u})</div>`).join('');
         document.getElementById('st-total').innerText = db.c.reduce((s,x)=>s+x.bal,0).toFixed(2);
         document.getElementById('st-count').innerText = db.c.length;
-        if(currentUsername === 'admin') document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'block');
     }
 
     function addUser() {
@@ -329,13 +341,11 @@
 
     function search(q) {
         q = q.toLowerCase();
-        document.querySelectorAll('.cust-row').forEach(row => {
-            row.style.display = row.innerText.toLowerCase().includes(q) ? 'block' : 'none';
-        });
+        document.querySelectorAll('.cust-row').forEach(row => row.style.display = row.innerText.toLowerCase().includes(q) ? 'block' : 'none');
     }
 
     function wipeSystem() {
-        if(prompt("Enter Admin Password to WIPE EVERYTHING:") === "123455") {
+        if(prompt("Enter Admin Code to format all data:") === "123455") {
             db = { c: [], u: [{n: 'Admin', u: 'admin', p: '123455'}] }; save(); location.reload();
         }
     }
