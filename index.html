@@ -3,156 +3,169 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DTT Aziziya - Live Sync</title>
+    <title>DTT Aziziya - Cloud Master</title>
     <style>
         :root { --p: #0f6e56; --s: #d4af37; --bg: #f1f5f9; --txt: #1e293b; --err: #be123c; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; color: var(--txt); }
-        
-        /* Navigation & Status */
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding-bottom: 50px; }
         .header { background: var(--p); color: white; padding: 15px; text-align: center; border-bottom: 4px solid var(--s); }
-        #sync-bar { font-size: 11px; text-align: center; padding: 6px; background: #fff; border-bottom: 1px solid #ddd; font-weight: bold; }
-        .sync-loading { color: var(--s); }
-        .sync-success { color: var(--p); }
-        
-        .nav { display: flex; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        #sync-status { font-size: 11px; text-align: center; padding: 5px; background: #fff; border-bottom: 1px solid #ddd; font-weight: bold; }
+        .nav { display: flex; background: white; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .tab { flex: 1; padding: 15px; text-align: center; cursor: pointer; font-weight: bold; font-size: 13px; color: #64748b; }
         .tab.active { color: var(--p); border-bottom: 3px solid var(--p); }
-
-        /* Main Content */
         .pg { display: none; padding: 15px; max-width: 600px; margin: auto; }
         .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 12px; }
-        
         input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
         .btn { border: none; padding: 14px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 5px; }
         .btn-p { background: var(--p); color: white; }
-        
-        .cust-row { background: white; margin-bottom: 10px; border-radius: 10px; border-left: 6px solid var(--p); padding: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .cust-row { background: white; margin-bottom: 8px; border-radius: 10px; border-left: 5px solid var(--p); padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .history-item { font-size: 12px; border-bottom: 1px solid #eee; padding: 8px 0; display: flex; justify-content: space-between; }
     </style>
 </head>
 <body>
 
 <div id="login-screen" style="position:fixed; inset:0; background:var(--p); z-index:9999; display:flex; align-items:center; justify-content:center;">
     <div class="card" style="width:300px; text-align:center;">
-        <h2 style="color:var(--p)">DTT AZIZIYA</h2>
+        <h2>DTT AZIZIYA</h2>
         <input type="password" id="l-pass" placeholder="Password">
-        <button class="btn btn-p" onclick="login()">Open System</button>
+        <button class="btn btn-p" onclick="login()">ENTER</button>
     </div>
 </div>
 
 <div id="app" style="display:none">
     <div class="header"><h1>DTT AZIZIYA</h1></div>
-    <div id="sync-bar">Initializing...</div>
+    <div id="sync-status">Cloud Sync Active</div>
 
     <div class="nav">
-        <div class="tab active" id="t-dash" onclick="page('dash')">Dashboard</div>
+        <div class="tab active" id="t-dash" onclick="page('dash')">Main</div>
         <div class="tab" id="t-cust" onclick="page('cust')">Clients</div>
-        <div class="tab" id="t-sett" onclick="page('sett')">Cloud</div>
+        <div class="tab" id="t-sett" onclick="page('sett')">Setup</div>
     </div>
 
     <div id="pg-dash" class="pg" style="display:block">
         <div class="card" style="text-align:center">
             <h2 id="st-total" style="color:var(--err); margin:0">0.00</h2>
-            <small>Total Outstanding Balance</small>
+            <small>Total Outstanding (QAR)</small>
         </div>
-        <button class="btn btn-p" onclick="addCust()">+ Add New Customer</button>
-        <button class="btn" style="background:#e2e8f0; margin-top:10px" onclick="pull()">🔄 Refresh Data</button>
+        <button class="btn btn-p" onclick="openNewCust()">+ Register New Customer</button>
+        <button class="btn" style="background:#fff; border:1px solid var(--p); color:var(--p); margin-top:10px" onclick="pull()">🔄 Refresh Data</button>
     </div>
 
     <div id="pg-cust" class="pg">
-        <input type="text" id="search" placeholder="Search customers..." onkeyup="render()">
+        <input type="text" id="search" placeholder="Search customer name..." onkeyup="render()">
         <div id="clist"></div>
+    </div>
+
+    <div id="pg-det" class="pg">
+        <button onclick="page('cust')" style="border:none; background:none; color:var(--p); font-weight:bold; cursor:pointer"><- Back to List</button>
+        <div class="card">
+            <h3 id="det-name" style="margin:0"></h3>
+            <h2 id="det-bal" style="color:var(--err)"></h2>
+            <hr>
+            <button class="btn btn-p" onclick="addTxn('due')">+ Add Debt</button>
+            <button class="btn" style="background:var(--s); color:white" onclick="addTxn('pay')">✓ Payment Received</button>
+        </div>
+        <h4>Transaction History</h4>
+        <div class="card" id="det-hist"></div>
     </div>
 
     <div id="pg-sett" class="pg">
         <div class="card">
-            <h3>Cloud Configuration</h3>
-            <p style="font-size:12px; color:#666">Devices will stay updated using this URL:</p>
+            <h3>Google Drive Link</h3>
+            <p style="font-size:12px">Enter the Google Script URL to sync all devices:</p>
             <input type="text" id="cloud-url" placeholder="https://script.google.com/...">
-            <button class="btn btn-p" onclick="saveUrl()">Connect All Devices</button>
-            <p style="font-size:11px; margin-top:10px">Status: <span id="cloud-status">Disconnected</span></p>
+            <button class="btn btn-p" onclick="saveUrl()">Link Drive</button>
         </div>
     </div>
 </div>
 
 <script>
     let db = { c: [] };
-    let cloudUrl = localStorage.getItem('dtt_master_url') || "";
+    let cloudUrl = localStorage.getItem('dtt_final_url') || "";
+    let activeCid = null;
 
-    // Sync Logic
+    // --- CLOUD LOGIC ---
     async function pull() {
         if (!cloudUrl) return;
-        updateStatus("Downloading latest data...", "loading");
+        document.getElementById('sync-status').innerText = "⌛ Downloading from Drive...";
         try {
             const r = await fetch(cloudUrl);
             const data = await r.json();
-            if (data.c) {
-                db = data;
-                render();
-                updateStatus("Cloud Synced ✅", "success");
-            }
-        } catch (e) { updateStatus("Sync Failed ❌ Check URL", "err"); }
+            if (data.c) { db = data; render(); document.getElementById('sync-status').innerText = "✅ Synced"; }
+        } catch (e) { document.getElementById('sync-status').innerText = "❌ Sync Failed"; }
     }
 
     async function push() {
         if (!cloudUrl) return;
-        updateStatus("Saving to Cloud...", "loading");
+        document.getElementById('sync-status').innerText = "⌛ Saving to Drive...";
         try {
             await fetch(cloudUrl, { method: 'POST', body: JSON.stringify(db) });
-            updateStatus("Saved to Cloud ✅", "success");
-        } catch (e) { updateStatus("Save Failed ❌", "err"); }
+            document.getElementById('sync-status').innerText = "✅ Saved Successfully";
+        } catch (e) { document.getElementById('sync-status').innerText = "❌ Save Failed"; }
     }
 
-    function updateStatus(msg, type) {
-        const bar = document.getElementById('sync-bar');
-        bar.innerText = msg;
-        bar.className = "sync-" + type;
-    }
-
-    function saveUrl() {
-        cloudUrl = document.getElementById('cloud-url').value;
-        localStorage.setItem('dtt_master_url', cloudUrl);
-        document.getElementById('cloud-status').innerText = "Connected";
-        pull();
-    }
-
+    // --- UI LOGIC ---
     function login() {
         if(document.getElementById('l-pass').value === '123456') {
             document.getElementById('login-screen').style.display='none';
             document.getElementById('app').style.display='block';
             document.getElementById('cloud-url').value = cloudUrl;
-            if(cloudUrl) { pull(); }
-            render();
+            if(cloudUrl) pull();
         }
     }
 
-    function page(p) {
-        document.querySelectorAll('.pg').forEach(x => x.style.display = x.id==='pg-'+p ? 'block' : 'none');
-        document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
-        document.getElementById('t-'+p).classList.add('active');
+    function saveUrl() {
+        cloudUrl = document.getElementById('cloud-url').value;
+        localStorage.setItem('dtt_final_url', cloudUrl);
+        pull();
     }
 
-    function addCust() {
-        const n = prompt("Customer Name:");
-        if(n) {
-            db.c.push({ id: Date.now(), n: n, bal: 0 });
-            render();
-            push(); // Automatically updates other devices
-        }
+    function openNewCust() {
+        const n = prompt("Customer Full Name:");
+        if(n) { db.c.push({ id: Date.now(), n: n, bal: 0, h: [] }); push(); render(); }
+    }
+
+    function showDetails(cid) {
+        activeCid = cid;
+        const c = db.c.find(x => x.id === cid);
+        document.getElementById('det-name').innerText = c.n;
+        document.getElementById('det-bal').innerText = "QAR " + c.bal.toFixed(2);
+        document.getElementById('det-hist').innerHTML = c.h.reverse().map(h => `
+            <div class="history-item">
+                <span>${h.date}<br><small>${h.note}</small></span>
+                <b style="color:${h.t==='due'?'var(--err)':'var(--p)'}">${h.t==='due'?'+':'-'} ${h.amt}</b>
+            </div>
+        `).join('') || "No history yet";
+        page('det');
+    }
+
+    function addTxn(type) {
+        const amt = parseFloat(prompt("Enter Amount (QAR):"));
+        const note = prompt("Note (Item/Reason):") || "General";
+        if(!amt) return;
+        const c = db.c.find(x => x.id === activeCid);
+        const date = new Date().toLocaleDateString();
+        c.bal += (type==='due' ? amt : -amt);
+        c.h.push({ date, amt, note, t: type });
+        push();
+        showDetails(activeCid);
     }
 
     function render() {
         const q = document.getElementById('search').value.toLowerCase();
         const list = document.getElementById('clist');
-        const filtered = db.c.filter(c => c.n.toLowerCase().includes(q));
-        
-        list.innerHTML = filtered.map(c => `
-            <div class="cust-row">
-                <div><b>${c.n}</b></div>
-                <div style="color:var(--err); font-weight:bold">QAR ${c.bal.toFixed(2)}</div>
+        list.innerHTML = db.c.filter(c => c.n.toLowerCase().includes(q)).map(c => `
+            <div class="cust-row" onclick="showDetails(${c.id})">
+                <b>${c.n}</b>
+                <span style="color:var(--err); font-weight:bold">QAR ${c.bal.toFixed(2)}</span>
             </div>
         `).join('');
-        
         document.getElementById('st-total').innerText = db.c.reduce((s,x)=>s+x.bal,0).toFixed(2);
+    }
+
+    function page(p) {
+        document.querySelectorAll('.pg').forEach(x => x.style.display = x.id==='pg-'+p ? 'block' : 'none');
+        document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+        if(p !== 'det') document.getElementById('t-'+p).classList.add('active');
     }
 </script>
 </body>
