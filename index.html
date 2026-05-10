@@ -2,200 +2,158 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DTT Aziziya Web App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DTT Aziziya - Live Sync</title>
     <style>
         :root { --p: #0f6e56; --s: #d4af37; --bg: #f1f5f9; --txt: #1e293b; --err: #be123c; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); margin: 0; color: var(--txt); }
-        .header { background: var(--p); color: white; padding: 20px; text-align: center; border-bottom: 5px solid var(--s); }
-        .nav { display: flex; background: white; border-bottom: 1px solid #ddd; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .tab { flex: 1; padding: 15px 5px; text-align: center; cursor: pointer; font-weight: bold; font-size: 13px; border-bottom: 3px solid transparent; }
-        .tab.active { color: var(--p); border-bottom: 3px solid var(--p); background: #f8fafc; }
-        .pg { display: none; padding: 15px; max-width: 800px; margin: auto; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 15px; }
-        input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
-        .btn { border: none; padding: 14px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; font-size: 14px; margin-top: 5px; text-transform: uppercase; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; color: var(--txt); }
+        
+        /* Navigation & Status */
+        .header { background: var(--p); color: white; padding: 15px; text-align: center; border-bottom: 4px solid var(--s); }
+        #sync-bar { font-size: 11px; text-align: center; padding: 6px; background: #fff; border-bottom: 1px solid #ddd; font-weight: bold; }
+        .sync-loading { color: var(--s); }
+        .sync-success { color: var(--p); }
+        
+        .nav { display: flex; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .tab { flex: 1; padding: 15px; text-align: center; cursor: pointer; font-weight: bold; font-size: 13px; color: #64748b; }
+        .tab.active { color: var(--p); border-bottom: 3px solid var(--p); }
+
+        /* Main Content */
+        .pg { display: none; padding: 15px; max-width: 600px; margin: auto; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 12px; }
+        
+        input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        .btn { border: none; padding: 14px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 5px; }
         .btn-p { background: var(--p); color: white; }
-        .btn-d { background: var(--err); color: white; }
-        .btn-s { background: var(--s); color: white; }
-        .cust-row { background: white; margin-bottom: 10px; border-radius: 10px; border-left: 6px solid var(--p); box-shadow: 0 2px 4px rgba(0,0,0,0.08); }
-        .cust-top { padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
-        .cust-body { display: none; padding: 15px; border-top: 1px solid #f1f5f9; background: #fafafa; }
-        .open .cust-body { display: block; }
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 15px; }
-        .modal-box { background: white; padding: 25px; border-radius: 15px; width: 100%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
-        @media print { .no-print { display: none !important; } .print-only { display: block !important; } }
-        .print-only { display: none; }
+        
+        .cust-row { background: white; margin-bottom: 10px; border-radius: 10px; border-left: 6px solid var(--p); padding: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
     </style>
 </head>
 <body>
 
 <div id="login-screen" style="position:fixed; inset:0; background:var(--p); z-index:9999; display:flex; align-items:center; justify-content:center;">
-    <div class="card" style="width:320px; text-align:center;">
-        <h2 style="color:var(--p); margin-top:0;">DTT AZIZIYA</h2>
-        <p style="font-size:12px; color:#666">Cloud Web App v1.0</p>
-        <input type="text" id="l-user" placeholder="Username">
+    <div class="card" style="width:300px; text-align:center;">
+        <h2 style="color:var(--p)">DTT AZIZIYA</h2>
         <input type="password" id="l-pass" placeholder="Password">
-        <button class="btn btn-p" onclick="login()">Access App</button>
-        <p id="l-err" style="color:red; font-size:12px; margin-top:10px"></p>
+        <button class="btn btn-p" onclick="login()">Open System</button>
     </div>
 </div>
 
-<div id="app" class="no-print" style="display:none">
-    <div class="header">
-        <h1 style="margin:0; font-size:22px;">Doha Technical Trading</h1>
-        <small>Aziziya System | 66682315</small>
-    </div>
+<div id="app" style="display:none">
+    <div class="header"><h1>DTT AZIZIYA</h1></div>
+    <div id="sync-bar">Initializing...</div>
+
     <div class="nav">
-        <div class="tab active" onclick="page('dash')">Main</div>
-        <div class="tab" onclick="page('cust')">Clients</div>
-        <div class="tab" onclick="page('rep')">Report</div>
-        <div class="tab" onclick="page('sett')">Sync</div>
+        <div class="tab active" id="t-dash" onclick="page('dash')">Dashboard</div>
+        <div class="tab" id="t-cust" onclick="page('cust')">Clients</div>
+        <div class="tab" id="t-sett" onclick="page('sett')">Cloud</div>
     </div>
 
     <div id="pg-dash" class="pg" style="display:block">
-        <div class="stats">
-            <div class="card"><h2 id="st-total" style="color:var(--err); margin:0;">0.00</h2><small>Market Balance</small></div>
-            <div class="card"><h2 id="st-count" style="margin:0;">0</h2><small>Customers</small></div>
+        <div class="card" style="text-align:center">
+            <h2 id="st-total" style="color:var(--err); margin:0">0.00</h2>
+            <small>Total Outstanding Balance</small>
         </div>
-        <button class="btn btn-p" onclick="openM('cust')">+ Add New Customer</button>
+        <button class="btn btn-p" onclick="addCust()">+ Add New Customer</button>
+        <button class="btn" style="background:#e2e8f0; margin-top:10px" onclick="pull()">🔄 Refresh Data</button>
     </div>
 
     <div id="pg-cust" class="pg">
-        <input type="text" placeholder="Search by name..." onkeyup="search(this.value)">
+        <input type="text" id="search" placeholder="Search customers..." onkeyup="render()">
         <div id="clist"></div>
-    </div>
-
-    <div id="pg-rep" class="pg">
-        <div class="card">
-            <h3>Monthly Business</h3>
-            <input type="month" id="rep-month" onchange="genReport()">
-            <div id="rep-box" style="margin-top:20px; display:none;">
-                <div style="padding:15px; background:#fff1f2; border-radius:10px; margin-bottom:10px">
-                    <small>Total Dues Given:</small>
-                    <h2 id="rep-out" style="color:var(--err); margin:0;"></h2>
-                </div>
-                <div style="padding:15px; background:#f0fdf4; border-radius:10px">
-                    <small>Total Cash Received:</small>
-                    <h2 id="rep-in" style="color:var(--p); margin:0;"></h2>
-                </div>
-            </div>
-        </div>
     </div>
 
     <div id="pg-sett" class="pg">
         <div class="card">
-            <h3>Backup & Sync</h3>
-            <p style="font-size:12px; color:#666">Important: Since this is a local web app, download a backup if you plan to switch phones.</p>
-            <button class="btn btn-p" onclick="downloadBackup()">📥 Export Data File</button>
-            <div style="margin-top:15px;">
-                <input type="file" id="importFile" style="display:none" onchange="importBackup(this)">
-                <button class="btn btn-s" onclick="document.getElementById('importFile').click()">📤 Import Data File</button>
-            </div>
-        </div>
-        <div class="card" style="border-top:3px solid var(--err)">
-            <button class="btn btn-d" onclick="wipe()">Reset System</button>
+            <h3>Cloud Configuration</h3>
+            <p style="font-size:12px; color:#666">Devices will stay updated using this URL:</p>
+            <input type="text" id="cloud-url" placeholder="https://script.google.com/...">
+            <button class="btn btn-p" onclick="saveUrl()">Connect All Devices</button>
+            <p style="font-size:11px; margin-top:10px">Status: <span id="cloud-status">Disconnected</span></p>
         </div>
     </div>
 </div>
 
-<div id="m-cust" class="modal"><div class="modal-box"><h3>Register Customer</h3><input type="text" id="nc-name" placeholder="Full Name"><input type="text" id="nc-phone" placeholder="Mobile"><button class="btn btn-p" onclick="saveCust()">Save Customer</button><button class="btn" onclick="closeM('cust')">Cancel</button></div></div>
-<div id="m-txn" class="modal"><div class="modal-box"><h3 id="txn-head"></h3><input type="text" id="tx-desc" placeholder="Details (Product/Service)"><input type="number" id="tx-amt" placeholder="Amount (QAR)"><input type="date" id="tx-date"><button id="tx-btn" class="btn"></button><button class="btn" onclick="closeM('txn')">Cancel</button></div></div>
-
 <script>
-    let db = JSON.parse(localStorage.getItem('dtt_az_web')) || { c: [], u: [{u:'admin', p:'123456', n:'Admin'}] };
-    let curUser = "Admin"; let activeCid = null; const today = new Date().toISOString().split('T')[0];
+    let db = { c: [] };
+    let cloudUrl = localStorage.getItem('dtt_master_url') || "";
 
-    function save() { localStorage.setItem('dtt_az_web', JSON.stringify(db)); render(); }
-    
+    // Sync Logic
+    async function pull() {
+        if (!cloudUrl) return;
+        updateStatus("Downloading latest data...", "loading");
+        try {
+            const r = await fetch(cloudUrl);
+            const data = await r.json();
+            if (data.c) {
+                db = data;
+                render();
+                updateStatus("Cloud Synced ✅", "success");
+            }
+        } catch (e) { updateStatus("Sync Failed ❌ Check URL", "err"); }
+    }
+
+    async function push() {
+        if (!cloudUrl) return;
+        updateStatus("Saving to Cloud...", "loading");
+        try {
+            await fetch(cloudUrl, { method: 'POST', body: JSON.stringify(db) });
+            updateStatus("Saved to Cloud ✅", "success");
+        } catch (e) { updateStatus("Save Failed ❌", "err"); }
+    }
+
+    function updateStatus(msg, type) {
+        const bar = document.getElementById('sync-bar');
+        bar.innerText = msg;
+        bar.className = "sync-" + type;
+    }
+
+    function saveUrl() {
+        cloudUrl = document.getElementById('cloud-url').value;
+        localStorage.setItem('dtt_master_url', cloudUrl);
+        document.getElementById('cloud-status').innerText = "Connected";
+        pull();
+    }
+
     function login() {
-        const u = document.getElementById('l-user').value, p = document.getElementById('l-pass').value;
-        const user = db.u.find(x => x.u === u && x.p === p);
-        if(user) { 
-            curUser = user.n; 
-            document.getElementById('login-screen').style.display='none'; 
-            document.getElementById('app').style.display='block'; 
-            render(); 
-        } else { document.getElementById('l-err').innerText = "Invalid Login Credentials"; }
+        if(document.getElementById('l-pass').value === '123456') {
+            document.getElementById('login-screen').style.display='none';
+            document.getElementById('app').style.display='block';
+            document.getElementById('cloud-url').value = cloudUrl;
+            if(cloudUrl) { pull(); }
+            render();
+        }
     }
 
     function page(p) {
         document.querySelectorAll('.pg').forEach(x => x.style.display = x.id==='pg-'+p ? 'block' : 'none');
-        document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.getAttribute('onclick').includes(p)));
+        document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+        document.getElementById('t-'+p).classList.add('active');
     }
 
-    function openM(id, cid = null) { activeCid = cid; document.getElementById('m-'+id).style.display='flex'; }
-    function closeM(id) { document.getElementById('m-'+id).style.display='none'; }
-
-    function saveCust() {
-        const n = document.getElementById('nc-name').value;
-        if(n) { db.c.push({ id: Date.now(), n, ph: document.getElementById('nc-phone').value, bal: 0, h: [] }); save(); closeM('cust'); }
-    }
-
-    function openTxn(type, cid) {
-        activeCid = cid; document.getElementById('txn-head').innerText = type==='due' ? 'Add Due Amount' : 'Receive Payment';
-        document.getElementById('tx-btn').innerText = 'Save Transaction';
-        document.getElementById('tx-date').value = today;
-        document.getElementById('tx-btn').onclick = () => {
-            const amt = parseFloat(document.getElementById('tx-amt').value);
-            if(!amt) return;
-            const c = db.c.find(x => x.id === activeCid);
-            c.bal += (type==='due' ? amt : -amt);
-            c.h.push({ d: document.getElementById('tx-date').value, desc: document.getElementById('tx-desc').value, t: type, a: amt, s: curUser });
-            save(); closeM('txn');
-            document.getElementById('tx-amt').value = ''; document.getElementById('tx-desc').value = '';
-        };
-        openM('txn', cid);
-    }
-
-    function genReport() {
-        const m = document.getElementById('rep-month').value;
-        let out = 0, inc = 0;
-        db.c.forEach(c => c.h.forEach(h => {
-            if(h.d.startsWith(m)) { if(h.t==='due') out += h.a; else inc += h.a; }
-        }));
-        document.getElementById('rep-box').style.display='block';
-        document.getElementById('rep-out').innerText = `QAR ${out.toFixed(2)}`;
-        document.getElementById('rep-in').innerText = `QAR ${inc.toFixed(2)}`;
-    }
-
-    function downloadBackup() {
-        const blob = new Blob([JSON.stringify(db)], {type: 'text/plain'});
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `DTT_Backup_${today}.txt`;
-        a.click();
-    }
-
-    function importBackup(input) {
-        const reader = new FileReader();
-        reader.onload = function() {
-            db = JSON.parse(reader.result); save(); location.reload();
-        };
-        reader.readAsText(input.files[0]);
+    function addCust() {
+        const n = prompt("Customer Name:");
+        if(n) {
+            db.c.push({ id: Date.now(), n: n, bal: 0 });
+            render();
+            push(); // Automatically updates other devices
+        }
     }
 
     function render() {
-        document.getElementById('clist').innerHTML = db.c.map(c => `
+        const q = document.getElementById('search').value.toLowerCase();
+        const list = document.getElementById('clist');
+        const filtered = db.c.filter(c => c.n.toLowerCase().includes(q));
+        
+        list.innerHTML = filtered.map(c => `
             <div class="cust-row">
-                <div class="cust-top" onclick="this.parentElement.classList.toggle('open')">
-                    <div><b>${c.n}</b><br><small>${c.ph}</small></div>
-                    <div style="color:${c.bal > 0 ? 'var(--err)' : 'var(--p)'}; font-weight:bold">QAR ${c.bal.toFixed(2)}</div>
-                </div>
-                <div class="cust-body">
-                    <div style="display:flex; gap:10px;">
-                        <button class="btn btn-d" onclick="openTxn('due', ${c.id})">Add Due</button>
-                        <button class="btn btn-p" onclick="openTxn('pay', ${c.id})">Pay</button>
-                    </div>
-                </div>
+                <div><b>${c.n}</b></div>
+                <div style="color:var(--err); font-weight:bold">QAR ${c.bal.toFixed(2)}</div>
             </div>
         `).join('');
-        document.getElementById('st-total').innerText = "QAR " + db.c.reduce((s,x)=>s+x.bal,0).toFixed(2);
-        document.getElementById('st-count').innerText = db.c.length;
+        
+        document.getElementById('st-total').innerText = db.c.reduce((s,x)=>s+x.bal,0).toFixed(2);
     }
-
-    function search(q) { q = q.toLowerCase(); document.querySelectorAll('.cust-row').forEach(r => r.style.display = r.innerText.toLowerCase().includes(q) ? 'block' : 'none'); }
-    function wipe() { if(confirm("This will delete ALL data. Proceed?")) { localStorage.clear(); location.reload(); } }
 </script>
 </body>
 </html>
