@@ -304,7 +304,7 @@ html,body{height:100%;font-family:var(--ff);background:var(--canvas);color:var(-
     <div class="lf"><label>Password</label><input type="password" id="l-pass" placeholder="Enter password" autocomplete="current-password"/></div>
     <button class="login-btn" onclick="doLogin()">Sign In</button>
     <div id="login-err"></div>
-    <div class="login-hint">admin / admin123 &nbsp;·&nbsp; staff / staff123</div>
+    
   </div>
 </div>
 
@@ -1012,8 +1012,14 @@ function removeStaff(id){
   pushToCloud(); renderStaff();
 }
 function wipeAll(){
-  if(!confirm('DELETE ALL DATA? This cannot be undone!')) return;
-  if(!confirm('Are you absolutely sure? All customers and transactions will be permanently deleted.')) return;
+  const resetPass = prompt('Enter admin password to authorize system reset:');
+  if(resetPass === null) return;
+  const adminUser = db.users.find(u => u.role === 'admin');
+  if(!adminUser || resetPass !== adminUser.password){
+    showToast('Wrong password — reset cancelled.', 'error');
+    return;
+  }
+  if(!confirm('Password verified. DELETE ALL CUSTOMER DATA permanently?')) return;
   db.customers=[];
   pushToCloud(); renderAll();
   showToast('System reset complete.');
