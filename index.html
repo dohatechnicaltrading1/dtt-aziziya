@@ -51,6 +51,7 @@
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 15px; }
         .modal-box { background: white; padding: 25px; border-radius: 15px; width: 100%; max-width: 450px; max-height: 90vh; overflow-y: auto; }
         .rep-box { padding: 15px; border-radius: 10px; border-left: 5px solid var(--s); margin-bottom: 10px; background: #f8fafc; }
+        input[type="file"] { padding: 8px; background: #f8fafc; font-size: 12px; border: 1px dashed #cbd5e1; }
     </style>
 </head>
 <body>
@@ -164,9 +165,22 @@
     <input type="text" id="nc-name" placeholder="Full Name">
     <input type="text" id="nc-phone" placeholder="Mobile Number">
     <input type="text" id="nc-nation" placeholder="Nationality">
-    <input type="text" id="nc-id" placeholder="QID / Passport Number">
+    
+    <select id="nc-doc-type" style="margin-bottom:6px;">
+        <option value="">Document Type (Optional)</option>
+        <option value="QID">Qatar ID (QID)</option>
+        <option value="Passport">Passport</option>
+        <option value="License">Driving License</option>
+        <option value="Other">Other</option>
+    </select>
+    <input type="text" id="nc-doc-num" placeholder="Document Number (Optional)">
+    
+    <label style="font-size:12px; font-weight:bold; display:block;">Attach Document (Photo/PDF)</label>
+    <input type="file" id="nc-doc-file" accept="image/*,.pdf" onchange="uploadDocFile()">
+    <div id="doc-upload-status" style="font-size:11px; margin-bottom:10px;"></div>
+
     <textarea id="nc-desc" placeholder="Notes (e.g. Address, Reference)"></textarea>
-    <button class="btn btn-p" onclick="saveCust()">Register</button>
+    <button id="btn-save-cust" class="btn btn-p" onclick="saveCust()">Register</button>
     <button class="btn" style="margin-top:10px; background:#e2e8f0;" onclick="closeM('cust')">Cancel</button>
 </div></div>
 
@@ -193,13 +207,41 @@
 </div></div>
 
 <script>
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwwL7UvDDb1vb9NdQjceefNPab9Cbnmk-aoYUaOYLF1Wj6j_TwhwBEDvK37KA8rwUMlvg/exec'; 
+    const WEB_APP_URL = 'PASTE_YOUR_LINK_HERE'; 
     const DB_KEY = 'dtt_ultimate_master';
     
-    // Admin strict password check initialization
     let db = JSON.parse(localStorage.getItem(DB_KEY)) || { c: [], u: [{n: 'Admin', u: 'admin', p: '123455'}] };
-    let currentUser = "Admin", currentUsername = "admin", actCid = null, actTxId = null;
+    let currentUser = "Admin", currentUsername = "admin", actCid = null, actTxId = null, uploadedDocUrl = "";
     const todayStr = new Date().toISOString().split('T')[0];
+
+    function fDate(dStr) {
+        if(!dStr) return '';
+        const parts = dStr.split('-');
+        return parts.length === 3 ? `${parts[2]}-${parts[1]}-${parts[0]}` : dStr;
+    }
+
+    async function uploadDocFile() {
+        const fileInput = document.getElementById('nc-doc-file');
+        const file = fileInput.files[0];
+        if(!file) return;
+        const btn = document.getElementById('btn-save-cust'), status = document.getElementById('doc-upload-status');
+        btn.disabled = true; status.innerHTML = "⏳ Uploading to Drive...";
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+            const base64 = e.target.result.split(',')[1];
+            try {
+                const res = await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'upload', filename: file.name, mimeType: file.type, base64: base64 })
+                });
+                const data = await res.json(); 
+                if(data.url) { uploadedDocUrl = data.url; status.innerHTML = "✅ Attached!"; status.style.color = "green"; }
+            } catch(err) { status.innerHTML = "❌ Upload Error"; status.style.color = "red"; }
+            btn.disabled = false;
+        };
+        reader.readAsDataURL(file);
+    }
 
     async function syncToCloud() {
         const ind = document.getElementById('sync-indicator');
@@ -214,13 +256,7 @@
         try {
             const r = await fetch(WEB_APP_URL);
             const data = await r.json();
-            if(data && data.c) { 
-                db = data; 
-                // Force admin password to remain 123455 in case of bad cloud data
-                let adm = db.u.find(u => u.u === 'admin');
-                if(adm) adm.p = '123455'; 
-                save(false); render(); 
-            }
+            if(data && data.c) { db = data; save(false); render(); }
         } catch(e) {}
     }
 
@@ -247,19 +283,23 @@
         if(p === 'hist') renderHistory();
     }
 
-    function openM(id, cid = null) { actCid = cid; document.getElementById('m-'+id).style.display='flex'; }
+    function openM(id, cid = null) { 
+        actCid = cid; 
+        if(id === 'cust') { uploadedDocUrl = ""; document.getElementById('nc-doc-file').value = ""; document.getElementById('doc-upload-status').innerHTML = ""; }
+        document.getElementById('m-'+id).style.display='flex'; 
+    }
+    
     function closeM(id) { document.getElementById('m-'+id).style.display='none'; }
 
     function saveCust() {
         const name = document.getElementById('nc-name').value;
         if(!name) return alert("Name is required");
         db.c.push({ 
-            id: Date.now(), n: name, ph: document.getElementById('nc-phone').value, 
-            na: document.getElementById('nc-nation').value, idno: document.getElementById('nc-id').value, 
-            desc: document.getElementById('nc-desc').value, bal: 0, h: [], created: todayStr 
+            id: Date.now(), n: name, ph: document.getElementById('nc-phone').value, na: document.getElementById('nc-nation').value, 
+            docType: document.getElementById('nc-doc-type').value, docNum: document.getElementById('nc-doc-num').value, 
+            docUrl: uploadedDocUrl, desc: document.getElementById('nc-desc').value, bal: 0, h: [], created: todayStr 
         });
         save(); closeM('cust'); render();
-        document.getElementById('nc-name').value = ''; document.getElementById('nc-desc').value = '';
     }
 
     function openTxn(type, cid) {
@@ -275,39 +315,28 @@
         const amt = forceAmt || parseFloat(document.getElementById('tx-amt').value);
         const c = db.c.find(x => x.id === actCid);
         if(!amt) return;
-        c.h.push({ 
-            id: Date.now(), d: document.getElementById('tx-date').value || todayStr, 
-            desc: forceDesc || document.getElementById('tx-desc').value || (type==='due'?'Items/Service':'Cash Payment'), 
-            t: type === 'due' ? 'DEBIT' : 'CREDIT', a: amt, s: currentUser 
-        });
+        c.h.push({ id: Date.now(), d: document.getElementById('tx-date').value || todayStr, desc: forceDesc || document.getElementById('tx-desc').value || (type==='due'?'Items/Service':'Cash Payment'), t: type === 'due' ? 'DEBIT' : 'CREDIT', a: amt, s: currentUser });
         recalc(c); save(); closeM('txn'); render();
-        document.getElementById('tx-amt').value = ''; document.getElementById('tx-desc').value = '';
     }
 
-    function recalc(customer) {
-        customer.bal = customer.h.reduce((sum, h) => sum + (h.t === 'DEBIT' ? h.a : -h.a), 0);
-    }
+    function recalc(customer) { customer.bal = customer.h.reduce((sum, h) => sum + (h.t === 'DEBIT' ? h.a : -h.a), 0); }
 
     function openEdit(cid, txId) {
         actCid = cid; actTxId = txId;
         const c = db.c.find(x => x.id === cid), tx = c.h.find(h => h.id === txId);
-        document.getElementById('ed-date').value = tx.d;
-        document.getElementById('ed-amt').value = tx.a;
-        document.getElementById('ed-desc').value = tx.desc;
+        document.getElementById('ed-date').value = tx.d; document.getElementById('ed-amt').value = tx.a; document.getElementById('ed-desc').value = tx.desc;
         openM('edit');
     }
 
     function processEdit() {
         const c = db.c.find(x => x.id === actCid), tx = c.h.find(h => h.id === actTxId);
-        tx.d = document.getElementById('ed-date').value;
-        tx.a = parseFloat(document.getElementById('ed-amt').value);
-        tx.desc = document.getElementById('ed-desc').value;
-        tx.eb = currentUser; tx.et = new Date().toLocaleString('en-GB', { hour12: true });
+        tx.d = document.getElementById('ed-date').value; tx.a = parseFloat(document.getElementById('ed-amt').value);
+        tx.desc = document.getElementById('ed-desc').value; tx.eb = currentUser; tx.et = new Date().toLocaleString('en-GB');
         recalc(c); save(); closeM('edit'); render(); renderHistory();
     }
 
     function undoTxn(cid, txId) {
-        if(confirm("Confirm Delete? Balance will be adjusted.")) {
+        if(confirm("Delete record?")) {
             const c = db.c.find(x => x.id === cid);
             c.h = c.h.filter(h => h.id !== txId);
             recalc(c); save(); render(); renderHistory();
@@ -316,35 +345,18 @@
 
     function settleCustomer(cid) {
         const c = db.c.find(x => x.id === cid);
-        if(c.bal <= 0) return alert("Account is already 0.");
-        if(confirm(`Settle full balance of QAR ${c.bal.toFixed(2)} for ${c.n}?`)) {
-            actCid = cid; processTxn('pay', c.bal, "Full Settlement");
-        }
+        if(c.bal <= 0) return alert("Balance is 0.");
+        if(confirm(`Settle QAR ${c.bal.toFixed(2)}?`)) { actCid = cid; processTxn('pay', c.bal, "Full Settlement"); }
     }
 
     function deleteCustomer(cid) {
-        if(currentUsername !== 'admin') return alert("Admin only");
-        if(confirm("Permanently delete this customer and all history?")) {
-            db.c = db.c.filter(x => x.id !== cid); save(); render();
-        }
-    }
-
-    function deleteStaff(user) {
-        if(user === 'admin') return alert("Cannot delete main Admin");
-        if(confirm(`Delete staff member ${user}?`)) {
-            db.u = db.u.filter(x => x.u !== user); save(); render();
-        }
+        if(currentUsername !== 'admin') return;
+        if(confirm("Delete customer?")) { db.c = db.c.filter(x => x.id !== cid); save(); render(); }
     }
 
     function sendWhatsApp(cid) {
         const c = db.c.find(x => x.id === cid);
-        let msg = `*Doha Technical Trading W.L.L*\n_Aziziya Branch_\n\n*Statement of Account*\nCustomer: ${c.n}\nOutstanding Balance: *QAR ${c.bal.toFixed(2)}*\n\n*Recent Activity:*\n`;
-        c.h.slice(-5).forEach(h => {
-            let icon = h.t === 'DEBIT' ? '🔴' : '🟢';
-            let typeStr = h.t === 'DEBIT' ? 'Due' : 'Paid';
-            msg += `${icon} ${h.d}: ${h.desc} - QAR ${h.a} (${typeStr})\n`;
-        });
-        msg += `\nThank you for your business!`;
+        let msg = `*DTT Aziziya*\nCustomer: ${c.n}\nBalance: *QAR ${c.bal.toFixed(2)}*`;
         let phone = c.ph.replace(/\D/g, '');
         if(phone.length === 8) phone = '974' + phone;
         window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
@@ -352,100 +364,47 @@
 
     function printStatement(cid) {
         const c = db.c.find(x => x.id === cid);
-        document.getElementById('p-info').innerHTML = `<b>Customer Name:</b> ${c.n}<br><b>Phone:</b> ${c.ph || '-'}<br><b>Nationality:</b> ${c.na || '-'} | <b>QID/ID:</b> ${c.idno || '-'}<br><b>Notes:</b> ${c.desc || '-'}`;
-        document.getElementById('p-tbody').innerHTML = c.h.map(h => `<tr><td>${h.d}</td><td>${h.desc}</td><td style="color:red">${h.t==='DEBIT'?h.a.toFixed(2):'-'}</td><td style="color:green">${h.t==='CREDIT'?h.a.toFixed(2):'-'}</td></tr>`).join('');
-        document.getElementById('p-total').innerHTML = `Outstanding Balance: <span style="color:${c.bal > 0 ? 'red' : 'green'}">QAR ${c.bal.toFixed(2)}</span>`;
+        document.getElementById('p-info').innerHTML = `<b>Customer:</b> ${c.n}<br><b>Phone:</b> ${c.ph}<br><b>Document:</b> ${c.docType || ''} ${c.docNum || ''}`;
+        document.getElementById('p-tbody').innerHTML = c.h.map(h => `<tr><td>${fDate(h.d)}</td><td>${h.desc}</td><td style="color:red">${h.t==='DEBIT'?h.a.toFixed(2):'-'}</td><td style="color:green">${h.t==='CREDIT'?h.a.toFixed(2):'-'}</td></tr>`).join('');
+        document.getElementById('p-total').innerHTML = `Balance: QAR ${c.bal.toFixed(2)}`;
         window.print();
     }
 
     function render() {
         document.getElementById('clist').innerHTML = db.c.map(c => {
             let balColor = c.bal > 0 ? 'var(--err)' : 'var(--success)';
+            let fileLink = c.docUrl ? ` | <a href="${c.docUrl}" target="_blank" style="color:#0ea5e9; font-weight:bold;">📄 View File</a>` : '';
             return `
             <div class="cust-row" style="border-left-color: ${balColor}">
                 <div class="cust-top" onclick="this.parentElement.classList.toggle('open')">
-                    <div><b>${c.n}</b><br><small>${c.ph || 'No Phone'} | ${c.na || ''}</small></div>
-                    <div style="color:${balColor}; font-weight:800; font-size:16px;">QAR ${c.bal.toFixed(2)}</div>
+                    <div><b>${c.n}</b><br><small>${c.ph || ''}</small></div>
+                    <div style="color:${balColor}; font-weight:800;">QAR ${c.bal.toFixed(2)}</div>
                 </div>
                 <div class="cust-body">
-                    <p style="font-size:12px; color:#555; margin-top:0;"><b>QID:</b> ${c.idno || '-'} | <b>Notes:</b> ${c.desc || '-'}</p>
-                    
+                    <p style="font-size:12px; margin-top:0;"><b>Doc:</b> ${c.docType||''} ${c.docNum||''}${fileLink}</p>
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
                         <button class="btn btn-d" onclick="openTxn('due', ${c.id})">Add Due</button>
                         <button class="btn btn-p" style="background:var(--success)" onclick="openTxn('pay', ${c.id})">Receive Pay</button>
                     </div>
-                    
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
-                        <button class="btn btn-s" onclick="printStatement(${c.id})">📄 PDF Print</button>
-                        <button class="btn btn-wa" onclick="sendWhatsApp(${c.id})">💬 WhatsApp</button>
+                        <button class="btn btn-s" onclick="printStatement(${c.id})">📄 Print</button>
+                        <button class="btn btn-wa" onclick="sendWhatsApp(${c.id})">💬 WA</button>
                     </div>
-
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px;">
-                        <button class="btn btn-outline" onclick="settleCustomer(${c.id})">✔ Settle Account</button>
-                        <button class="btn btn-d admin-only" style="opacity:0.8" onclick="deleteCustomer(${c.id})">🗑 Delete Profile</button>
-                    </div>
-
-                    <table style="background:white; border-radius:5px;">
-                        ${c.h.slice(-5).reverse().map(h => `<tr><td>${h.d}</td><td>${h.desc}</td><td align="right" style="color:${h.t==='DEBIT'?'red':'green'}"><b>${h.t==='DEBIT'?'+':'-'} ${h.a.toFixed(2)}</b></td>
-                        <td align="right"><button class="tool-btn" onclick="openEdit(${c.id}, ${h.id})">✏️</button><button class="tool-btn" style="color:red" onclick="undoTxn(${c.id}, ${h.id})">🗑️</button></td></tr>`).join('')}
+                    <button class="btn btn-outline" onclick="settleCustomer(${c.id})">✔ Settle</button>
+                    <table style="margin-top:10px;">
+                        ${c.h.slice(-5).reverse().map(h => `<tr><td>${fDate(h.d)}</td><td>${h.desc}</td><td align="right" style="color:${h.t==='DEBIT'?'red':'green'}">${h.a.toFixed(2)}</td></tr>`).join('')}
                     </table>
                 </div>
             </div>`
         }).join('');
         document.getElementById('st-total').innerText = db.c.reduce((s,x)=>s+x.bal,0).toFixed(2);
         document.getElementById('st-count').innerText = db.c.length;
-        
-        document.getElementById('ulist').innerHTML = db.u.map(u => `
-            <div style="padding:10px; background:white; margin-bottom:5px; border-radius:5px; display:flex; justify-content:space-between; align-items:center;">
-                <span><b>${u.n}</b> (${u.u})</span>
-                ${currentUsername === 'admin' && u.u !== 'admin' ? `<button class="btn btn-d" style="width:auto; padding:5px 10px;" onclick="deleteStaff('${u.u}')">Delete</button>` : ''}
-            </div>
-        `).join('');
     }
 
     function renderHistory() {
-        let all = [];
-        db.c.forEach(c => c.h.forEach(h => all.push({...h, cid: c.id, cn: c.n})));
+        let all = []; db.c.forEach(c => c.h.forEach(h => all.push({...h, cid: c.id, cn: c.n})));
         all.sort((a,b) => b.id - a.id);
-        document.getElementById('full-history-body').innerHTML = all.slice(0, 100).map(h => `
-            <tr>
-                <td>${h.d}</td>
-                <td><b>${h.cn}</b></td>
-                <td>${h.desc} ${h.eb ? `<span class="edit-tag">Edited by ${h.eb} @ ${h.et}</span>` : ''}</td>
-                <td style="color:${h.t==='DEBIT'?'red':'green'}">${h.a.toFixed(2)}</td>
-                <td>${h.s}</td>
-                <td class="action-btns">
-                    <button class="tool-btn" onclick="openEdit(${h.cid}, ${h.id})">✏️</button>
-                    <button class="tool-btn" style="color:red" onclick="undoTxn(${h.cid}, ${h.id})">🗑️</button>
-                </td>
-            </tr>
-        `).join('');
-    }
-
-    function genReport() {
-        const m = document.getElementById('rep-month').value;
-        if(!m) return;
-        let d=0, p=0, nc=[], settled=[];
-        db.c.forEach(c => {
-            if(c.created && c.created.startsWith(m)) nc.push(c.n);
-            let hadDebt = false;
-            c.h.forEach(h => { 
-                if(h.d.startsWith(m)) { 
-                    if(h.t==='DEBIT') { d+=h.a; hadDebt=true; } else { p+=h.a; } 
-                } 
-            });
-            if(c.bal <= 0 && c.h.some(h => h.d.startsWith(m) && h.t === 'CREDIT')) settled.push(c.n);
-        });
-        document.getElementById('rep-results').style.display = 'block';
-        document.getElementById('rep-out').innerText = "QAR " + d.toFixed(2);
-        document.getElementById('rep-in').innerText = "QAR " + p.toFixed(2);
-        document.getElementById('rep-new-cust').innerText = nc.length ? nc.join(", ") : "None";
-        document.getElementById('rep-settled-cust').innerText = settled.length ? settled.join(", ") : "None";
-    }
-
-    function addUser() {
-        const n = document.getElementById('nu-name').value, u = document.getElementById('nu-user').value, p = document.getElementById('nu-pass').value;
-        if(n && u && p) { db.u.push({n, u, p}); save(); render(); document.getElementById('nu-name').value=''; document.getElementById('nu-user').value=''; document.getElementById('nu-pass').value='';}
+        document.getElementById('full-history-body').innerHTML = all.slice(0, 100).map(h => `<tr><td>${fDate(h.d)}</td><td><b>${h.cn}</b></td><td>${h.desc}</td><td style="color:${h.t==='DEBIT'?'red':'green'}">${h.a.toFixed(2)}</td><td>${h.s}</td><td class="action-btns"><button class="tool-btn" onclick="openEdit(${h.cid}, ${h.id})">✏️</button><button class="tool-btn" style="color:red" onclick="undoTxn(${h.cid}, ${h.id})">🗑️</button></td></tr>`).join('');
     }
 
     function search(q) {
@@ -454,9 +413,7 @@
     }
 
     function wipeSystem() {
-        if(prompt("WARNING: Type '123455' to FORMAT ALL DATA:") === "123455") {
-            db = { c: [], u: [{n: 'Admin', u: 'admin', p: '123455'}] }; save(); location.reload();
-        } else { alert("Incorrect Admin Password."); }
+        if(prompt("Admin Code:") === "123455") { db = { c: [], u: [{n: 'Admin', u: 'admin', p: '123455'}] }; save(); location.reload(); }
     }
 </script>
 </body>
