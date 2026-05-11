@@ -111,7 +111,7 @@ html,body{height:100%;font-family:var(--ff);background:var(--canvas);color:var(-
 /* ═══════════════════════════════════════════
    DASHBOARD
 ═══════════════════════════════════════════ */
-.dash-hero{background:linear-gradient(135deg,var(--emerald) 0%,#047857 100%);border-radius:var(--rad3);padding:24px;margin-bottom:16px;position:relative;overflow:hidden;box-shadow:var(--sh2)}
+.dash-hero{background:linear-gradient(135deg,#7F1D1D 0%,#DC2626 100%);border-radius:var(--rad3);padding:24px;margin-bottom:16px;position:relative;overflow:hidden;box-shadow:var(--sh2)}
 .dash-hero::before{content:'';position:absolute;right:-20px;top:-20px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.06)}
 .dash-hero::after{content:'';position:absolute;right:30px;bottom:-30px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.04)}
 .dash-lbl{font-size:11px;font-weight:600;color:rgba(255,255,255,.65);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
@@ -364,7 +364,7 @@ html,body{height:100%;font-family:var(--ff);background:var(--canvas);color:var(-
         </div>
       </div>
       <div class="quick-actions">
-        <button class="qa-btn" onclick="openSheet('cust')">
+        <button class="qa-btn" onclick="openSheet('m-cust')">
           <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/><line x1="12" y1="11" x2="12" y2="21"/><line x1="8" y1="15" x2="16" y2="15"/></svg>
           <span>New Client</span>
         </button>
@@ -388,6 +388,13 @@ html,body{height:100%;font-family:var(--ff);background:var(--canvas);color:var(-
 
     <!-- CUSTOMERS -->
     <div class="pg" id="pg-cust">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div style="font-size:14px;font-weight:600;color:var(--ink)">Clients</div>
+        <button class="btn btn-primary" style="width:auto;padding:9px 16px;font-size:12px" onclick="openSheet('m-cust')">
+          <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/><line x1="12" y1="11" x2="12" y2="21"/><line x1="8" y1="15" x2="16" y2="15"/></svg>
+          New Client
+        </button>
+      </div>
       <div class="search-bar">
         <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input type="text" placeholder="Search name, phone, serial…" oninput="filterCusts(this.value)" id="cust-search"/>
@@ -458,6 +465,15 @@ html,body{height:100%;font-family:var(--ff);background:var(--canvas);color:var(-
       </div>
     </div>
 
+    <!-- HISTORY -->
+    <div class="pg" id="pg-hist">
+      <div class="section-label" style="margin-bottom:14px">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Recent Activity Log
+      </div>
+      <div id="hist-list"></div>
+    </div>
+
     <!-- SETTINGS -->
     <div class="pg" id="pg-sett">
       <div class="settings-section">
@@ -515,6 +531,10 @@ html,body{height:100%;font-family:var(--ff);background:var(--canvas);color:var(-
       <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
       <span>Reports</span>
     </button>
+    <button class="nav-item" onclick="setPage('hist')" id="nav-hist">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span>History</span>
+    </button>
     <button class="nav-item" onclick="setPage('sett')" id="nav-sett">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>
       <span>Setup</span>
@@ -532,6 +552,45 @@ html,body{height:100%;font-family:var(--ff);background:var(--canvas);color:var(-
     </div>
     <div class="mf"><label>Full Name *</label><input type="text" id="nc-name" placeholder="e.g. Ahmed Abdullah Al-Rashid"/></div>
     <div class="mf"><label>Mobile Number</label><input type="tel" id="nc-phone" placeholder="+974 6xxx xxxx"/></div>
+    <div class="mf"><label>Nationality</label>
+      <select id="nc-nationality">
+        <option value="">— Select Nationality —</option>
+        <option value="Qatari">Qatari</option>
+        <option value="Saudi Arabian">Saudi Arabian</option>
+        <option value="Emirati">Emirati</option>
+        <option value="Kuwaiti">Kuwaiti</option>
+        <option value="Bahraini">Bahraini</option>
+        <option value="Omani">Omani</option>
+        <option value="Egyptian">Egyptian</option>
+        <option value="Jordanian">Jordanian</option>
+        <option value="Lebanese">Lebanese</option>
+        <option value="Syrian">Syrian</option>
+        <option value="Yemeni">Yemeni</option>
+        <option value="Iraqi">Iraqi</option>
+        <option value="Palestinian">Palestinian</option>
+        <option value="Sudanese">Sudanese</option>
+        <option value="Moroccan">Moroccan</option>
+        <option value="Tunisian">Tunisian</option>
+        <option value="Algerian">Algerian</option>
+        <option value="Libyan">Libyan</option>
+        <option value="Indian">Indian</option>
+        <option value="Pakistani">Pakistani</option>
+        <option value="Bangladeshi">Bangladeshi</option>
+        <option value="Sri Lankan">Sri Lankan</option>
+        <option value="Nepali">Nepali</option>
+        <option value="Filipino">Filipino</option>
+        <option value="Indonesian">Indonesian</option>
+        <option value="British">British</option>
+        <option value="American">American</option>
+        <option value="Canadian">Canadian</option>
+        <option value="Australian">Australian</option>
+        <option value="French">French</option>
+        <option value="German">German</option>
+        <option value="Turkish">Turkish</option>
+        <option value="Iranian">Iranian</option>
+        <option value="Other">Other</option>
+      </select>
+    </div>
     <div class="mf"><label>Description / Notes</label><textarea id="nc-notes" placeholder="Any notes about this customer, items they usually purchase, etc."></textarea></div>
     <div class="mf">
       <label>Attach Document (ID / Photo / Contract)</label>
@@ -547,7 +606,6 @@ html,body{height:100%;font-family:var(--ff);background:var(--canvas);color:var(-
       </div>
       <input type="file" id="file-input" accept="image/*,.pdf" onchange="handleFileSelect(this)"/>
     </div>
-    <div class="mf"><label>Opening Due Balance (QAR)</label><input type="number" id="nc-due" placeholder="0.00" min="0" step="0.01"/></div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeSheet('m-cust')">Cancel</button>
       <button class="btn btn-primary" onclick="saveCustomer()">
@@ -572,6 +630,29 @@ html,body{height:100%;font-family:var(--ff);background:var(--canvas);color:var(-
       <button class="btn btn-primary" id="txn-confirm-btn" onclick="saveTxn()">Confirm</button>
     </div>
     <div class="err-msg" id="txn-err"></div>
+  </div>
+</div>
+
+<!-- ═══════ MODAL: EDIT TRANSACTION ═══════ -->
+<div class="modal" id="m-edit-txn">
+  <div class="modal-sheet">
+    <div class="sheet-handle"></div>
+    <div class="modal-title">
+      <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      Edit Transaction
+    </div>
+    <div class="mf"><label>Amount (QAR) *</label><input type="number" id="et-amt" placeholder="0.00" min="0.01" step="0.01"/></div>
+    <div class="mf"><label>Description</label><input type="text" id="et-desc" placeholder="e.g. Spare parts purchase, Monthly payment…"/></div>
+    <div class="mf"><label>Date</label><input type="date" id="et-date"/></div>
+    <div style="font-size:11px;color:var(--ink4);background:var(--canvas);border-radius:var(--rad);padding:8px 10px;margin-bottom:4px" id="et-meta"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeSheet('m-edit-txn')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEditTxn()">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        Save Changes
+      </button>
+    </div>
+    <div class="err-msg" id="et-err"></div>
   </div>
 </div>
 
@@ -600,6 +681,7 @@ const COLORS = [
 ═══════════════════════════════════════════ */
 let db = {
   customers: [],
+  activityLog: [],
   users: [
     {id:'u1',name:'Admin',username:'admin',password:'admin123',role:'admin'},
     {id:'u2',name:'Staff',username:'staff',password:'staff123',role:'staff'}
@@ -656,6 +738,7 @@ function loadLocal(){
   try{
     const d = localStorage.getItem(LS_KEY);
     if(d){ const p = JSON.parse(d); if(p && p.customers) db = p; }
+    if(!db.activityLog) db.activityLog = [];
   } catch(e){}
 }
 
@@ -675,6 +758,8 @@ async function syncNow(){
     if(cloud && cloud.customers){
       db.customers = cloud.customers;
       if(cloud.users && cloud.users.length) db.users = cloud.users;
+      if(cloud.activityLog) db.activityLog = cloud.activityLog;
+      if(!db.activityLog) db.activityLog = [];
       saveLocal(); renderAll();
     }
     setSyncStatus('online');
@@ -728,6 +813,7 @@ function setPage(p){
   if(p==='cust') renderCusts();
   if(p==='sett') renderStaff();
   if(p==='rep') populateCustSelect();
+  if(p==='hist') renderHistory();
 }
 
 /* ═══════════════════════════════════════════
@@ -735,16 +821,20 @@ function setPage(p){
 ═══════════════════════════════════════════ */
 function openSheet(id){
   // reset fields
-  if(id==='cust'){
-    ['nc-name','nc-phone','nc-notes','nc-due'].forEach(i=>{ const el=document.getElementById(i); if(el) el.value=''; });
+  if(id==='m-cust'){
+    ['nc-name','nc-phone','nc-notes'].forEach(i=>{ const el=document.getElementById(i); if(el) el.value=''; });
+    const natEl = document.getElementById('nc-nationality');
+    if(natEl) natEl.value = '';
     clearUpload();
     document.getElementById('nc-err').textContent='';
   }
-  document.getElementById('m-'+id).classList.add('open');
+  document.getElementById(id).classList.add('open');
 }
-function closeSheet(id){ document.getElementById('m-'+id).classList.remove('open'); }
-document.querySelectorAll('.modal').forEach(m=>{
-  m.addEventListener('click', e=>{ if(e.target===m) m.classList.remove('open'); });
+function closeSheet(id){ document.getElementById(id).classList.remove('open'); }
+document.addEventListener('DOMContentLoaded', ()=>{
+  document.querySelectorAll('.modal').forEach(m=>{
+    m.addEventListener('click', e=>{ if(e.target===m) m.classList.remove('open'); });
+  });
 });
 
 /* ═══════════════════════════════════════════
@@ -799,7 +889,7 @@ async function saveCustomer(){
   if(!name){ document.getElementById('nc-err').textContent='Customer name is required.'; return; }
   const phone = document.getElementById('nc-phone').value.trim();
   const notes = document.getElementById('nc-notes').value.trim();
-  const due = parseFloat(document.getElementById('nc-due').value)||0;
+  const nationality = document.getElementById('nc-nationality').value.trim();
 
   let fileUrl = null;
   if(pendingFileData){
@@ -808,8 +898,9 @@ async function saveCustomer(){
   }
 
   const serial = nextSerial();
-  const txns = due > 0 ? [{id:uid(),type:'due',amt:due,desc:'Opening balance',date:today(),by:currentUser.name}] : [];
-  db.customers.push({ id:uid(), serial, name, phone, notes, fileUrl, due, transactions:txns, createdAt:today() });
+  const newCust = { id:uid(), serial, name, phone, notes, nationality, fileUrl, due:0, transactions:[], createdAt:today(), createdBy:currentUser.name };
+  db.customers.push(newCust);
+  addActivity('New customer registered: ' + serial + ' — ' + name, currentUser.name);
   pushToCloud();
   clearUpload();
   closeSheet('m-cust');
@@ -840,21 +931,122 @@ function saveTxn(){
   if(!amt||amt<=0){ document.getElementById('txn-err').textContent='Enter a valid amount.'; return; }
   const c = db.customers.find(x=>x.id===activeCid);
   if(!c) return;
-  c.transactions.push({ id:uid(), type:txnMode, amt, desc, date, by:currentUser.name });
+  c.transactions.push({ id:uid(), type:txnMode, amt, desc, date, by:currentUser.name, createdAt: new Date().toISOString() });
   c.due = c.transactions.reduce((s,t)=> t.type==='due' ? s+t.amt : s-t.amt, 0);
   c.due = Math.max(0, +c.due.toFixed(2));
+  const actMsg = txnMode==='due'
+    ? 'Due added '+qar(amt)+' for '+c.name+' ('+c.serial+')'+(desc?' — '+desc:'')
+    : 'Payment '+qar(amt)+' recorded for '+c.name+' ('+c.serial+')'+(desc?' — '+desc:'');
+  addActivity(actMsg, currentUser.name);
   pushToCloud();
   closeSheet('m-txn');
   renderAll();
   showToast(txnMode==='due' ? 'Due added: '+qar(amt) : 'Payment recorded: '+qar(amt));
 }
 
+/* ═══════════════════════════════════════════
+   ACTIVITY LOG
+═══════════════════════════════════════════ */
+function addActivity(msg, byUser){
+  if(!db.activityLog) db.activityLog = [];
+  db.activityLog.unshift({ id:uid(), msg, by:byUser, ts: new Date().toISOString() });
+  if(db.activityLog.length > 200) db.activityLog = db.activityLog.slice(0,200);
+}
+
+function renderHistory(){
+  const list = document.getElementById('hist-list');
+  if(!list) return;
+  if(!db.activityLog || !db.activityLog.length){
+    list.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><p>No activity recorded yet</p></div>';
+    return;
+  }
+  list.innerHTML = db.activityLog.map(a=>{
+    const dt = new Date(a.ts);
+    const dateStr = dt.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+    const timeStr = dt.toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit'});
+    const isEdit = a.msg.startsWith('Transaction edited');
+    const isDel = a.msg.startsWith('Transaction deleted') || a.msg.startsWith('Customer deleted');
+    const isNew = a.msg.startsWith('New customer') || a.msg.startsWith('Due added') || a.msg.startsWith('Payment') || a.msg.startsWith('Full settlement');
+    const dotColor = isEdit ? 'var(--gold-m)' : isDel ? 'var(--crimson-m)' : 'var(--emerald-m)';
+    return `<div style="display:flex;gap:12px;padding:10px 14px;background:var(--paper);border-radius:var(--rad);border:1px solid var(--edge);margin-bottom:8px;box-shadow:var(--sh)">
+      <div style="width:8px;height:8px;border-radius:50%;background:${dotColor};flex-shrink:0;margin-top:5px"></div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:500;color:var(--ink)">${a.msg}</div>
+        <div style="font-size:11px;color:var(--ink4);margin-top:3px;font-family:var(--fm)">${dateStr} at ${timeStr} · by <b style="color:var(--ink3)">${a.by||'—'}</b></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ═══════════════════════════════════════════
+   EDIT / DELETE TRANSACTION
+═══════════════════════════════════════════ */
+let editTxnCid = null;
+let editTxnId = null;
+
+function openEditTxn(cid, tid){
+  const c = db.customers.find(x=>x.id===cid);
+  if(!c) return;
+  const t = c.transactions.find(x=>x.id===tid);
+  if(!t) return;
+  editTxnCid = cid;
+  editTxnId = tid;
+  document.getElementById('et-amt').value = t.amt;
+  document.getElementById('et-desc').value = t.desc||'';
+  document.getElementById('et-date').value = t.date;
+  document.getElementById('et-err').textContent = '';
+  const meta = document.getElementById('et-meta');
+  let metaStr = 'Created by: ' + (t.by||'—') + ' on ' + t.date;
+  if(t.editedBy) metaStr += '  |  Last edited by: ' + t.editedBy + ' at ' + t.editedAt;
+  meta.textContent = metaStr;
+  document.getElementById('m-edit-txn').classList.add('open');
+}
+
+function saveEditTxn(){
+  const amt = parseFloat(document.getElementById('et-amt').value);
+  const desc = document.getElementById('et-desc').value.trim();
+  const date = document.getElementById('et-date').value || today();
+  if(!amt||amt<=0){ document.getElementById('et-err').textContent='Enter a valid amount.'; return; }
+  const c = db.customers.find(x=>x.id===editTxnCid);
+  if(!c) return;
+  const t = c.transactions.find(x=>x.id===editTxnId);
+  if(!t) return;
+  const oldAmt = t.amt;
+  t.amt = amt;
+  t.desc = desc;
+  t.date = date;
+  t.editedBy = currentUser.name;
+  t.editedAt = new Date().toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  c.due = c.transactions.reduce((s,x)=> x.type==='due' ? s+x.amt : s-x.amt, 0);
+  c.due = Math.max(0, +c.due.toFixed(2));
+  addActivity('Transaction edited for '+c.name+' ('+c.serial+') — '+t.type.toUpperCase()+' changed from '+qar(oldAmt)+' to '+qar(amt), currentUser.name);
+  pushToCloud();
+  closeSheet('m-edit-txn');
+  renderAll();
+  showToast('Transaction updated!');
+}
+
+function deleteTxn(cid, tid){
+  const c = db.customers.find(x=>x.id===cid);
+  if(!c) return;
+  const t = c.transactions.find(x=>x.id===tid);
+  if(!t) return;
+  if(!confirm('Delete this transaction?\n'+t.type.toUpperCase()+' — '+qar(t.amt)+(t.desc?' — '+t.desc:''))) return;
+  addActivity('Transaction deleted for '+c.name+' ('+c.serial+') — '+t.type.toUpperCase()+' '+qar(t.amt), currentUser.name);
+  c.transactions = c.transactions.filter(x=>x.id!==tid);
+  c.due = c.transactions.reduce((s,x)=> x.type==='due' ? s+x.amt : s-x.amt, 0);
+  c.due = Math.max(0, +c.due.toFixed(2));
+  pushToCloud(); renderAll();
+  showToast('Transaction deleted.');
+}
+
 function settleAccount(cid){
   const c = db.customers.find(x=>x.id===cid);
   if(!c || c.due<=0){ showToast('Account already cleared', 'error'); return; }
   if(!confirm('Settle full balance of ' + qar(c.due) + ' for ' + c.name + '?')) return;
-  c.transactions.push({ id:uid(), type:'pay', amt:c.due, desc:'FULL SETTLEMENT', date:today(), by:currentUser.name });
+  c.transactions.push({ id:uid(), type:'pay', amt:c.due, desc:'FULL SETTLEMENT', date:today(), by:currentUser.name, createdAt: new Date().toISOString() });
   c.due = 0;
+  addActivity('Full settlement for '+c.name+' ('+c.serial+')', currentUser.name);
   pushToCloud(); renderAll();
   showToast(c.name + ' — account fully settled!');
 }
@@ -863,6 +1055,7 @@ function deleteCustomer(cid){
   const c = db.customers.find(x=>x.id===cid);
   if(!c) return;
   if(!confirm('Delete ' + c.name + '? All transaction history will be removed permanently.')) return;
+  addActivity('Customer deleted: '+c.serial+' — '+c.name, currentUser.name);
   db.customers = db.customers.filter(x=>x.id!==cid);
   pushToCloud(); renderAll();
   showToast(c.name + ' deleted.');
@@ -872,7 +1065,7 @@ function deleteCustomer(cid){
    RENDER
 ═══════════════════════════════════════════ */
 function renderAll(){
-  renderDash(); renderCusts(); populateCustSelect();
+  renderDash(); renderCusts(); populateCustSelect(); renderHistory();
 }
 
 function renderDash(){
@@ -921,10 +1114,18 @@ function renderCusts(){
         <div class="txn-dot ${t.type}"></div>
         <div class="txn-info">
           <div class="txn-desc">${t.desc||'—'}</div>
-          <div class="txn-date">${t.date} · by ${t.by||'—'}</div>
+          <div class="txn-date">${t.date} · by ${t.by||'—'}${t.editedBy?' · <span style="color:var(--gold-m)">edited by '+t.editedBy+' at '+t.editedAt+'</span>':''}</div>
         </div>
         <span class="txn-type-badge ${t.type==='due'?'ttb-due':'ttb-pay'}">${t.type==='due'?'DUE':'PAID'}</span>
         <div class="txn-amt ${t.type==='due'?'txn-due-amt':'txn-pay-amt'}">${t.type==='due'?'+':'-'}${qar(t.amt)}</div>
+        <div style="display:flex;gap:4px;margin-left:6px">
+          <button title="Edit" onclick="openEditTxn('${c.id}','${t.id}')" style="background:var(--sapphire-l);border:none;border-radius:6px;padding:4px 7px;cursor:pointer;color:var(--sapphire-m)">
+            <svg viewBox="0 0 24 24" width="12" height="12" style="stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button title="Delete" onclick="deleteTxn('${c.id}','${t.id}')" style="background:var(--crimson-l);border:none;border-radius:6px;padding:4px 7px;cursor:pointer;color:var(--crimson-m)">
+            <svg viewBox="0 0 24 24" width="12" height="12" style="stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+          </button>
+        </div>
       </div>`).join('') : '<div style="font-size:12px;color:var(--ink4);padding:8px 0">No transactions yet</div>';
     return `
     <div class="cust-card ${c.due>500?'high-due':''}" id="card-${c.id}">
