@@ -300,10 +300,7 @@ html,body{height:100%;font-family:var(--ff);background:var(--canvas);color:var(-
 @keyframes bounceIn{0%{transform:scale(.8);opacity:0}60%{transform:scale(1.06)}100%{transform:scale(1);opacity:1}}
 @keyframes waBounce{0%,100%{transform:scale(1)}40%{transform:scale(1.12)}70%{transform:scale(.96)}}
 
-/* Page transition */
 .pg.active{animation:fadeSlideIn .28s ease both}
-
-/* Card stagger */
 .cust-card{animation:fadeSlideIn .25s ease both}
 .cust-card:nth-child(1){animation-delay:.03s}
 .cust-card:nth-child(2){animation-delay:.06s}
@@ -311,44 +308,22 @@ html,body{height:100%;font-family:var(--ff);background:var(--canvas);color:var(-
 .cust-card:nth-child(4){animation-delay:.12s}
 .cust-card:nth-child(5){animation-delay:.15s}
 .cust-card:nth-child(n+6){animation-delay:.18s}
-
-/* Stat cards */
 .stat-card{animation:scaleIn .3s ease both}
 .dash-stats .stat-card:nth-child(1){animation-delay:.05s}
 .dash-stats .stat-card:nth-child(2){animation-delay:.1s}
 .dash-stats .stat-card:nth-child(3){animation-delay:.15s}
 .dash-stats .stat-card:nth-child(4){animation-delay:.2s}
-
-/* Dash hero number */
 .dash-total{animation:bounceIn .4s ease .1s both}
-
-/* Modal open */
 .modal-sheet{transition:transform .22s ease,opacity .22s ease}
-
-/* Transaction row reveal */
 .txn-item{animation:fadeSlideIn .2s ease both}
-
-/* History items */
 #hist-list > div{animation:fadeSlideIn .22s ease both}
-
-/* WhatsApp button pulse on hover */
 .wa-btn:hover svg{animation:waBounce .5s ease}
-
-/* Nav active indicator slide */
 .nav-item.active::after{transition:all .2s ease}
-
-/* Act btn ripple feel */
 .act-btn{position:relative;overflow:hidden}
 .act-btn::after{content:'';position:absolute;inset:0;background:rgba(255,255,255,.2);opacity:0;transition:opacity .2s}
 .act-btn:active::after{opacity:1}
-
-/* Login card entrance */
 .login-card{animation:fadeSlideIn .4s ease .1s both}
-
-/* Smooth number transition in stat cards */
 .stat-val{transition:color .3s}
-
-/* Report cards */
 .report-card{animation:fadeSlideIn .25s ease both}
 .report-card:nth-child(1){animation-delay:.04s}
 .report-card:nth-child(2){animation-delay:.1s}
@@ -372,7 +347,6 @@ html,body{height:100%;font-family:var(--ff);background:var(--canvas);color:var(-
     <div class="lf"><label>Password</label><input type="password" id="l-pass" placeholder="Enter password" autocomplete="current-password"/></div>
     <button class="login-btn" onclick="doLogin()">Sign In</button>
     <div id="login-err"></div>
-    
   </div>
 </div>
 
@@ -478,7 +452,6 @@ html,body{height:100%;font-family:var(--ff);background:var(--canvas);color:var(-
     <!-- REPORTS -->
     <div class="pg" id="pg-rep">
       <div class="reports-grid">
-        <!-- Monthly Report -->
         <div class="report-card">
           <div class="report-card-icon" style="background:var(--sapphire-l);color:var(--sapphire-m)">
             <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -500,7 +473,6 @@ html,body{height:100%;font-family:var(--ff);background:var(--canvas);color:var(-
             Export Monthly PDF
           </button>
         </div>
-        <!-- Master Due List -->
         <div class="report-card">
           <div class="report-card-icon" style="background:var(--crimson-l);color:var(--crimson-m)">
             <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
@@ -512,7 +484,6 @@ html,body{height:100%;font-family:var(--ff);background:var(--canvas);color:var(-
             Export Master List PDF
           </button>
         </div>
-        <!-- Customer Statement -->
         <div class="report-card">
           <div class="report-card-icon" style="background:var(--gold-l);color:var(--gold-m)">
             <svg viewBox="0 0 24 24"><path d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
@@ -760,7 +731,7 @@ let activeCid = null;
 let txnMode = null;
 let custFilter = 'all';
 let custSearch = '';
-let pendingFileData = null; // {name, base64, mimeType}
+let pendingFileData = null;
 let uploadInProgress = false;
 
 /* ═══════════════════════════════════════════
@@ -768,11 +739,8 @@ let uploadInProgress = false;
 ═══════════════════════════════════════════ */
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 function today(){ return new Date().toISOString().slice(0,10); }
-// Convert YYYY-MM-DD → DD/MM/YYYY for display
 function toDisplay(s){ if(!s) return ''; const p=s.split('-'); return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:s; }
-// Convert DD/MM/YYYY → YYYY-MM-DD for storage
 function toStorage(s){ if(!s) return null; const p=s.split('/'); return p.length===3&&p[2].length===4?p[2]+'-'+p[1].padStart(2,'0')+'-'+p[0].padStart(2,'0'):null; }
-// Auto-insert slashes as user types DD/MM/YYYY
 function fmtDate(el){
   let v = el.value.replace(/[^\d]/g,'');
   if(v.length>2) v = v.slice(0,2)+'/'+v.slice(2);
@@ -797,7 +765,6 @@ function showToast(msg, type='success'){
   const icon = t.querySelector('svg');
   document.getElementById('toast-msg').textContent = msg;
   t.className = 'toast ' + type;
-  // update icon path
   if(type==='success'){
     icon.innerHTML = '<polyline points="20 6 9 17 4 12"/>';
   } else {
@@ -821,7 +788,7 @@ function loadLocal(){
   } catch(e){}
 }
 
-function setSyncStatus(status){ // 'online','syncing','offline'
+function setSyncStatus(status){
   const dot = document.getElementById('sync-dot');
   const lbl = document.getElementById('sync-lbl');
   if(status==='online'){ dot.className='sync-dot'; lbl.textContent='Cloud synced'; }
@@ -901,7 +868,6 @@ function setPage(p){
    SHEETS (MODALS)
 ═══════════════════════════════════════════ */
 function openSheet(id){
-  // reset fields
   if(id==='m-cust'){
     ['nc-name','nc-phone','nc-notes'].forEach(i=>{ const el=document.getElementById(i); if(el) el.value=''; });
     const natEl = document.getElementById('nc-nationality');
@@ -1048,7 +1014,6 @@ function renderHistory(){
     const timeStr = dt.toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit'});
     const isEdit = a.msg.startsWith('Transaction edited');
     const isDel = a.msg.startsWith('Transaction deleted') || a.msg.startsWith('Customer deleted');
-    const isNew = a.msg.startsWith('New customer') || a.msg.startsWith('Due added') || a.msg.startsWith('Payment') || a.msg.startsWith('Full settlement');
     const dotColor = isEdit ? 'var(--gold-m)' : isDel ? 'var(--crimson-m)' : 'var(--emerald-m)';
     return `<div style="display:flex;gap:12px;padding:10px 14px;background:var(--paper);border-radius:var(--rad);border:1px solid var(--edge);margin-bottom:8px;box-shadow:var(--sh)">
       <div style="width:8px;height:8px;border-radius:50%;background:${dotColor};flex-shrink:0;margin-top:5px"></div>
@@ -1207,8 +1172,8 @@ function renderCusts(){
   }
   g.innerHTML = list.map(c => {
     const col = colorFor(c.serial);
-    // Sort old → new for display
-    const txns = [...c.transactions].sort((a,b)=>a.date.localeCompare(b.date));
+    // ✅ FIX 1: null-safe date sort — handles transactions with no date
+    const txns = [...c.transactions].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
     const txnHTML = txns.length ? txns.map(t=>`
       <div class="txn-item">
         <div class="txn-dot ${t.type}"></div>
@@ -1227,7 +1192,6 @@ function renderCusts(){
           </button>
         </div>
       </div>`).join('') : '<div style="font-size:12px;color:var(--ink4);padding:8px 0">No transactions yet</div>';
-    // WhatsApp message builder
     const waPhone = (c.phone||'').replace(/[\s\-\(\)]/g,'').replace(/^\+/,'');
     const waMsg = encodeURIComponent('Dear '+c.name+',\nYour current outstanding balance at Doha Technical Trading is '+qar(c.due)+'.\nPlease contact us for payment. Thank you.');
     const waLink = waPhone ? 'https://wa.me/'+waPhone+'?text='+waMsg : '';
@@ -1347,7 +1311,7 @@ function runReport(){
   if(!m) return;
   let due=0, pay=0;
   db.customers.forEach(c=>c.transactions.forEach(t=>{
-    if(t.date.startsWith(m)){ if(t.type==='due') due+=t.amt; else pay+=t.amt; }
+    if(t.date&&t.date.startsWith(m)){ if(t.type==='due') due+=t.amt; else pay+=t.amt; }
   }));
   document.getElementById('month-summary').style.display='block';
   document.getElementById('ms-due').textContent=due.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -1373,8 +1337,8 @@ function printCustomerStatement(cid){
   const totDue = c.transactions.filter(t=>t.type==='due').reduce((s,t)=>s+t.amt,0);
   const totPay = c.transactions.filter(t=>t.type==='pay').reduce((s,t)=>s+t.amt,0);
   let running = 0;
-  // Sort OLD → NEW
-  const rows = [...c.transactions].sort((a,b)=>a.date.localeCompare(b.date)).map(t=>{
+  // ✅ FIX 1 also applied here for print statement sort
+  const rows = [...c.transactions].sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(t=>{
     running = t.type==='due' ? +(running+t.amt).toFixed(2) : +(Math.max(0,running-t.amt)).toFixed(2);
     return `<tr>
       <td>${toDisplay(t.date)||'—'}</td>
@@ -1417,14 +1381,20 @@ function printCustomerStatement(cid){
 function exportMasterPDF(){
   const custs = db.customers.filter(c=>c.due>0).sort((a,b)=>b.due-a.due);
   const totalDue = custs.reduce((s,c)=>s+c.due,0);
-  const rows = custs.map((c,i)=>`<tr>
-    <td style="text-align:center">${i+1}</td>
-    <td>${c.serial}</td>
-    <td style="font-weight:600">${c.name}</td>
-    <td>${c.phone||'—'}</td>
-    <td style="text-align:right;color:#be123c;font-weight:700">${qar(c.due)}</td>
-    <td>${c.transactions.length?toDisplay([...c.transactions].sort((a,b)=>b.date.localeCompare(a.date))[0].date):'—'}</td>
-  </tr>`).join('');
+  const rows = custs.map((c,i)=>{
+    // ✅ FIX 2: null-safe sort for last transaction date in master list
+    const lastTxn = c.transactions.length
+      ? [...c.transactions].sort((a,b)=>(b.date||'').localeCompare(a.date||''))[0].date
+      : null;
+    return `<tr>
+      <td style="text-align:center">${i+1}</td>
+      <td>${c.serial}</td>
+      <td style="font-weight:600">${c.name}</td>
+      <td>${c.phone||'—'}</td>
+      <td style="text-align:right;color:#be123c;font-weight:700">${qar(c.due)}</td>
+      <td>${lastTxn ? toDisplay(lastTxn) : '—'}</td>
+    </tr>`;
+  }).join('');
   const pt = document.getElementById('print-target');
   pt.innerHTML = buildPrintHeader('Master Outstanding Due List') + `
       <div style="font-size:12px;color:#555;margin-bottom:16px">Generated: ${today()} &nbsp;·&nbsp; ${custs.length} customer(s) with outstanding balance</div>
@@ -1449,11 +1419,11 @@ function exportMonthlyPDF(){
   const monthName = new Date(year, month-1, 1).toLocaleString('en',{month:'long',year:'numeric'});
   let allTxns = [];
   db.customers.forEach(c=>{
-    c.transactions.filter(t=>t.date.startsWith(m)).forEach(t=>{
+    c.transactions.filter(t=>t.date&&t.date.startsWith(m)).forEach(t=>{
       allTxns.push({...t, custName:c.name, custSerial:c.serial, custPhone:c.phone});
     });
   });
-  allTxns.sort((a,b)=>a.date.localeCompare(b.date));
+  allTxns.sort((a,b)=>(a.date||'').localeCompare(b.date||''));
   let totDue=0, totPay=0;
   const rows = allTxns.map((t,i)=>{
     if(t.type==='due') totDue+=t.amt; else totPay+=t.amt;
@@ -1504,11 +1474,8 @@ function exportCustomerPDF(){
    INIT
 ═══════════════════════════════════════════ */
 loadLocal();
-// init rep month to current
 const now = new Date();
 document.getElementById('rep-month').value = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
-
-// Auto sync every 90 seconds when visible
 setInterval(()=>{ if(currentUser) syncNow(); }, 90000);
 </script>
 </body>
