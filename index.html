@@ -3,29 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DTT AZIZIYA - MASTER SYSTEM</title>
+    <title>DTT - AZIZIYA ULTIMATE</title>
     <style>
         :root { --p: #0f6e56; --s: #d4af37; --bg: #f1f5f9; --txt: #1e293b; --err: #be123c; --success: #16a34a; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; color: var(--txt); }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; color: var(--txt); }
         
+        /* Professional Bill Print Design */
         @media print {
-            .no-print, .nav, .modal, button { display: none !important; }
-            .print-only { display: block !important; padding: 20px; }
+            .no-print, .nav, .modal, button, .sync-tag { display: none !important; }
+            .print-only { display: block !important; padding: 10px; }
+            .bill-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            .bill-table th { background: #f2f2f2 !important; border: 1px solid #000; padding: 12px; text-align: left; }
+            .bill-table td { border: 1px solid #000; padding: 10px; }
             .red-text { color: #be123c !important; font-weight: bold !important; -webkit-print-color-adjust: exact; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; border: 1px solid #000; }
-            th, td { border: 1px solid #000; padding: 10px; text-align: left; }
+            .bill-header { border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
         }
         .print-only { display: none; }
 
-        .header { background: var(--p); color: white; padding: 20px; text-align: center; border-bottom: 5px solid var(--s); position: relative; }
-        .sync-tag { position: absolute; top: 10px; right: 10px; font-size: 10px; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 4px; }
+        /* UI Styling */
+        .header { background: var(--p); color: white; padding: 15px; text-align: center; border-bottom: 4px solid var(--s); position: relative; }
+        .sync-controls { position: absolute; top: 15px; right: 15px; display: flex; gap: 10px; }
+        .refresh-btn { background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px; border-radius: 50%; cursor: pointer; font-size: 18px; }
         
-        .nav { display: flex; background: white; sticky: top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); overflow-x: auto; }
-        .tab { flex: 1; min-width: 90px; padding: 15px; text-align: center; cursor: pointer; font-weight: bold; border-bottom: 3px solid transparent; }
+        .nav { display: flex; background: white; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); overflow-x: auto; }
+        .tab { flex: 1; min-width: 80px; padding: 15px; text-align: center; cursor: pointer; font-weight: bold; border-bottom: 3px solid transparent; transition: 0.3s; }
         .tab.active { color: var(--p); border-bottom-color: var(--p); background: #f8fafc; }
 
-        .pg { display: none; padding: 15px; max-width: 800px; margin: auto; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 15px; text-align: center; }
+        .pg { display: none; padding: 15px; max-width: 900px; margin: auto; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 15px; text-align: center; }
         
         input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
         .btn { border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; transition: 0.2s; }
@@ -33,124 +38,136 @@
         .btn-d { background: var(--err); color: white; }
         .btn-s { background: var(--s); color: white; }
         
-        .cust-row { background: white; margin-bottom: 10px; border-radius: 10px; border-left: 6px solid var(--p); padding: 15px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .red-text { color: var(--err) !important; font-weight: bold; }
+        .cust-row { background: white; margin-bottom: 10px; border-radius: 10px; border-left: 6px solid var(--p); padding: 15px; cursor: pointer; position: relative; }
+        .red-text { color: var(--err); font-weight: bold; }
         
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 10px; }
-        .modal-box { background: white; padding: 25px; border-radius: 15px; width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto; }
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 15px; }
+        .modal-box { background: white; padding: 25px; border-radius: 15px; width: 100%; max-width: 450px; max-height: 90vh; overflow-y: auto; }
     </style>
 </head>
 <body>
 
-<div id="login-screen" style="position:fixed; inset:0; background:var(--p); z-index:9999; display:flex; align-items:center; justify-content:center;">
-    <div style="background:white; padding:30px; border-radius:15px; width:90%; max-width:320px; text-align:center;">
-        <h2 style="color:var(--p)">DTT AZIZIYA</h2>
-        <input type="text" id="l-user" placeholder="Username">
-        <input type="password" id="l-pass" placeholder="Password">
-        <button class="btn btn-p" onclick="login()">Enter System</button>
-        <p id="l-err" style="color:red; font-size:11px; margin-top:10px;"></p>
+<div class="header no-print">
+    <h1 style="margin:0; font-size:20px;">Doha Technical Trading W.L.L</h1>
+    <div class="sync-controls">
+        <button class="refresh-btn" title="Sync Data" onclick="sync(false)">🔄</button>
     </div>
+    <div id="sync-status" style="font-size:10px; margin-top:5px; opacity:0.8;">Connected</div>
 </div>
 
 <div id="print-view" class="print-only">
-    <center>
-        <h1 style="margin:0;">Doha Technical Trading W.L.L</h1>
-        <p>Al Aziziya, Qatar | Mobile: 66682315</p>
-        <hr>
-        <h2 id="print-title">REPORT</h2>
-    </center>
-    <div id="p-info" style="margin:20px 0; font-size:16px;"></div>
-    <table id="p-table">
+    <div class="bill-header">
+        <center>
+            <h1 style="margin:0;">Doha Technical Trading W.L.L</h1>
+            <p style="margin:5px 0;">Al Aziziya, Qatar | Mobile: 66682315</p>
+            <h2 id="print-title" style="background:#eee; padding:10px;">STATEMENT OF ACCOUNT</h2>
+        </center>
+    </div>
+    <div id="p-info" style="margin:20px 0; font-size:16px; line-height:1.6;"></div>
+    <table class="bill-table">
         <thead id="p-thead"></thead>
         <tbody id="p-tbody"></tbody>
     </table>
-    <h2 id="p-total" class="red-text" style="text-align:right; margin-top:20px;"></h2>
+    <div style="text-align:right; margin-top:30px;">
+        <h2 id="p-total" class="red-text"></h2>
+        <p style="margin-top:50px;">_______________________<br>Authorized Signature</p>
+    </div>
 </div>
 
 <div id="app" class="no-print" style="display:none">
-    <div class="header">
-        <h1 style="margin:0; font-size:22px;">DTT AZIZIYA</h1>
-        <div id="sync-status" class="sync-tag">Connecting...</div>
-    </div>
-
     <div class="nav">
-        <div class="tab active" onclick="page('dash')">Dash</div>
+        <div class="tab active" onclick="page('dash')">Dashboard</div>
         <div class="tab" onclick="page('cust')">Customers</div>
+        <div class="tab" onclick="page('hist')">Activity</div>
         <div class="tab" onclick="page('rep')">Reports</div>
         <div class="tab" onclick="page('sett')">Settings</div>
     </div>
 
     <div id="pg-dash" class="pg" style="display:block">
         <div class="card">
-            <small>Total Outstanding Balance</small>
-            <h1 id="st-total" class="red-text" style="margin:5px 0; font-size:40px;">0.00</h1>
+            <small>Total Business Outstanding</small>
+            <h1 id="st-total" class="red-text" style="font-size:42px; margin:10px 0;">0.00</h1>
         </div>
-        <button class="btn btn-p" onclick="openM('cust')" style="padding:18px; font-size:16px;">+ Register New Customer</button>
+        <button class="btn btn-p" onclick="openM('cust')" style="padding:15px;">+ Register New Client</button>
     </div>
 
     <div id="pg-cust" class="pg">
-        <input type="text" placeholder="Search customer by name or phone..." onkeyup="search(this.value)">
+        <input type="text" placeholder="Search by name, QID or phone..." onkeyup="search(this.value)">
         <div id="clist"></div>
+    </div>
+
+    <div id="pg-hist" class="pg">
+        <div class="card" style="text-align:left; overflow-x:auto;">
+            <h3>Global Activity Log</h3>
+            <table style="width:100%; font-size:12px;">
+                <thead><tr style="text-align:left;"><th>Date</th><th>Client</th><th>Details</th><th>Amt</th></tr></thead>
+                <tbody id="full-history-body"></tbody>
+            </table>
+        </div>
     </div>
 
     <div id="pg-rep" class="pg">
         <div class="card" style="text-align:left">
             <h3>Monthly Business Summary</h3>
             <input type="month" id="rep-month" onchange="runReport()">
-            <div id="rep-box" style="display:none; margin-top:15px;">
-                <p>New Dues: <b class="red-text" id="rep-due">0.00</b></p>
-                <p>Payments: <b style="color:var(--success)" id="rep-pay">0.00</b></p>
+            <div id="rep-box" style="display:none; margin-top:15px; display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                <div style="padding:15px; background:#fff1f2; border-radius:10px;">New Dues: <br><b class="red-text" id="rep-due">0.00</b></div>
+                <div style="padding:15px; background:#f0fdf4; border-radius:10px;">Payments: <br><b style="color:var(--success)" id="rep-pay">0.00</b></div>
             </div>
-            <hr>
-            <button class="btn btn-s" onclick="exportMasterList()">📄 Export Master Due List</button>
+            <button class="btn btn-s" onclick="exportMasterList()" style="margin-top:20px;">📄 Export Master Due List</button>
         </div>
     </div>
 
     <div id="pg-sett" class="pg">
         <div class="card" style="text-align:left">
-            <h3>Staff Members</h3>
+            <h3>Staff Management</h3>
             <div id="ulist" style="margin-bottom:15px;"></div>
             <div class="admin-only">
                 <input type="text" id="nu-name" placeholder="Staff Name">
-                <input type="text" id="nu-user" placeholder="Login ID">
+                <input type="text" id="nu-user" placeholder="Username">
                 <input type="text" id="nu-pass" placeholder="Password">
-                <button class="btn btn-p" onclick="addStaff()">Register Staff</button>
+                <button class="btn btn-p" onclick="addStaff()">Add Staff</button>
             </div>
         </div>
-        <button class="btn btn-d admin-only" onclick="wipeData()" style="margin-top:20px;">FACTORY RESET SYSTEM</button>
+        <button class="btn btn-d admin-only" onclick="wipeData()" style="margin-top:20px;">Wipe All Data</button>
     </div>
 </div>
 
 <div id="m-cust" class="modal"><div class="modal-box">
-    <h3>New Customer</h3>
-    <input type="text" id="nc-name" placeholder="Customer Name">
-    <input type="text" id="nc-phone" placeholder="Phone Number">
-    <input type="text" id="nc-id" placeholder="QID / Passport">
-    <label style="font-size:12px; font-weight:bold;">Attach ID Photo/PDF:</label>
+    <h3>New Customer Registration</h3>
+    <input type="text" id="nc-name" placeholder="Full Name">
+    <input type="text" id="nc-phone" placeholder="Mobile Number">
+    <input type="text" id="nc-nation" placeholder="Nationality">
+    <select id="nc-idtype">
+        <option value="QID">Qatar ID (QID)</option>
+        <option value="Passport">Passport</option>
+    </select>
+    <input type="text" id="nc-idval" placeholder="ID Number">
+    <label style="font-size:12px; font-weight:bold;">Attach Document:</label>
     <input type="file" id="nc-file" onchange="uploadFile()">
-    <div id="up-status" style="font-size:11px; margin-bottom:10px;"></div>
-    <button id="btn-save-c" class="btn btn-p" onclick="saveCustomer()">Save Customer</button>
-    <button class="btn" onclick="closeM('cust')" style="margin-top:8px; background:#eee;">Cancel</button>
+    <div id="up-status" style="font-size:11px; color:var(--success)"></div>
+    <button id="btn-save-c" class="btn btn-p" onclick="saveCustomer()">Create Profile</button>
+    <button class="btn" onclick="closeM('cust')" style="margin-top:10px; background:#eee;">Cancel</button>
 </div></div>
 
 <div id="m-txn" class="modal"><div class="modal-box">
     <h3 id="tx-head">Transaction</h3>
     <input type="number" id="tx-amt" placeholder="Amount (QAR)">
-    <input type="text" id="tx-desc" placeholder="Items / Details">
+    <textarea id="tx-desc" placeholder="Details (e.g. HP Ink, Mobile Screen, etc.)"></textarea>
     <input type="date" id="tx-date">
     <button id="tx-btn" class="btn"></button>
-    <button class="btn" onclick="closeM('txn')" style="margin-top:8px; background:#eee;">Cancel</button>
+    <button class="btn" onclick="closeM('txn')" style="margin-top:10px; background:#eee;">Cancel</button>
 </div></div>
 
 <script>
     const URL = 'https://script.google.com/macros/s/AKfycbwwL7UvDDb1vb9NdQjceefNPab9Cbnmk-aoYUaOYLF1Wj6j_TwhwBEDvK37KA8rwUMlvg/exec';
     let db = { c: [], u: [{n:'Admin', u:'admin', p:'123455'}] };
-    let currentUser = "", currentRole = "", actCid = null, tempUrl = "";
+    let currentUser = "Admin", currentRole = "admin", actCid = null, tempUrl = "";
 
-    const fDate = (d) => d.split('-').reverse().join('-');
+    const fDate = (d) => d ? d.split('-').reverse().join('-') : '-';
 
     async function sync(push = true) {
-        document.getElementById('sync-status').innerText = "Syncing...";
+        document.getElementById('sync-status').innerText = push ? "Updating Cloud..." : "Refreshing Data...";
         try {
             if(push) {
                 await fetch(URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(db) });
@@ -159,10 +176,13 @@
                 const cloudData = await res.json();
                 if(cloudData) db = cloudData;
             }
-            document.getElementById('sync-status').innerText = "Cloud Online";
+            document.getElementById('sync-status').innerText = "System Synced";
             localStorage.setItem('dtt_db', JSON.stringify(db));
             render();
-        } catch(e) { document.getElementById('sync-status').innerText = "Offline Mode"; }
+        } catch(e) { 
+            document.getElementById('sync-status').innerText = "Sync Failed (Using Offline Data)";
+            render();
+        }
     }
 
     function login() {
@@ -174,19 +194,19 @@
             document.getElementById('app').style.display = 'block';
             if(currentRole === 'admin') document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'block');
             sync(false);
-        } else { document.getElementById('l-err').innerText = "Incorrect Password"; }
+        } else { alert("Login Failed"); }
     }
 
     function page(p) {
         document.querySelectorAll('.pg').forEach(x => x.style.display = x.id === 'pg-'+p ? 'block' : 'none');
         document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.getAttribute('onclick').includes(p)));
+        if(p === 'hist') renderHistory();
     }
 
     function openM(id, cid = null) {
         actCid = cid; tempUrl = "";
         const m = document.getElementById('m-'+id);
         m.querySelectorAll('input, textarea').forEach(el => { if(el.type !== 'date') el.value = ''; });
-        document.getElementById('up-status').innerText = "";
         m.style.display = 'flex';
     }
 
@@ -195,14 +215,14 @@
     async function uploadFile() {
         const file = document.getElementById('nc-file').files[0];
         if(!file) return;
-        document.getElementById('up-status').innerText = "⏳ Uploading...";
+        document.getElementById('up-status').innerText = "Uploading to Cloud...";
         const reader = new FileReader();
         reader.onload = async (e) => {
             const base64 = e.target.result.split(',')[1];
             const res = await fetch(URL, { method: 'POST', body: JSON.stringify({ action: 'upload', filename: file.name, mimeType: file.type, base64: base64 })});
             const data = await res.json();
             tempUrl = data.url;
-            document.getElementById('up-status').innerText = "✅ File Ready";
+            document.getElementById('up-status').innerText = "✅ Upload Successful";
         };
         reader.readAsDataURL(file);
     }
@@ -210,15 +230,15 @@
     function saveCustomer() {
         const name = document.getElementById('nc-name').value;
         if(!name) return;
-        db.c.push({ id: Date.now(), n: name, ph: document.getElementById('nc-phone').value, qid: document.getElementById('nc-id').value, file: tempUrl, bal: 0, h: [] });
+        db.c.push({ id: Date.now(), n: name, ph: document.getElementById('nc-phone').value, na: document.getElementById('nc-nation').value, qid: document.getElementById('nc-idval').value, idType: document.getElementById('nc-idtype').value, file: tempUrl, bal: 0, h: [] });
         sync(); closeM('cust');
     }
 
     function openTxn(type, cid) {
         actCid = cid;
-        document.getElementById('tx-head').innerText = type === 'due' ? 'Add New Due' : 'Add Payment';
+        document.getElementById('tx-head').innerText = type === 'due' ? 'New Due Entry' : 'New Payment Entry';
         document.getElementById('tx-date').value = new Date().toISOString().split('T')[0];
-        document.getElementById('tx-btn').innerText = 'Submit';
+        document.getElementById('tx-btn').innerText = 'Register Transaction';
         document.getElementById('tx-btn').className = type === 'due' ? 'btn btn-d' : 'btn btn-p';
         document.getElementById('tx-btn').onclick = () => saveTxn(type);
         openM('txn', cid);
@@ -228,17 +248,26 @@
         const amt = parseFloat(document.getElementById('tx-amt').value);
         if(!amt) return;
         const c = db.c.find(x => x.id === actCid);
-        c.h.push({ d: document.getElementById('tx-date').value, desc: document.getElementById('tx-desc').value || 'Service', a: amt, t: type, s: currentUser });
+        c.h.push({ id: Date.now(), d: document.getElementById('tx-date').value, desc: document.getElementById('tx-desc').value || 'Service', a: amt, t: type, s: currentUser });
         c.bal = c.h.reduce((acc, curr) => acc + (curr.t === 'due' ? curr.a : -curr.a), 0);
         sync(); closeM('txn');
+    }
+
+    function settleAccount(cid) {
+        const c = db.c.find(x => x.id === cid);
+        if(c.bal <= 0) return alert("Account is already settled.");
+        if(confirm(`Settle full amount of QAR ${c.bal.toFixed(2)}?`)) {
+            c.h.push({ id: Date.now(), d: new Date().toISOString().split('T')[0], desc: 'FULL SETTLEMENT', a: c.bal, t: 'pay', s: currentUser });
+            c.bal = 0;
+            sync();
+        }
     }
 
     function addStaff() {
         const n = document.getElementById('nu-name').value, u = document.getElementById('nu-user').value, p = document.getElementById('nu-pass').value;
         if(n && u && p) {
             db.u.push({ n, u, p });
-            sync(); alert("Staff member registered.");
-            document.getElementById('nu-name').value = ''; document.getElementById('nu-user').value = ''; document.getElementById('nu-pass').value = '';
+            sync(); alert("Staff member added successfully.");
         }
     }
 
@@ -246,27 +275,31 @@
         const m = document.getElementById('rep-month').value;
         let due = 0, pay = 0;
         db.c.forEach(c => c.h.forEach(h => { if(h.d.startsWith(m)) { if(h.t === 'due') due += h.a; else pay += h.a; } }));
-        document.getElementById('rep-box').style.display = 'block';
+        document.getElementById('rep-box').style.display = 'grid';
         document.getElementById('rep-due').innerText = due.toFixed(2);
         document.getElementById('rep-pay').innerText = pay.toFixed(2);
     }
 
     function exportMasterList() {
-        document.getElementById('print-title').innerText = "MASTER DUE LIST";
-        document.getElementById('p-info').innerText = "All Customers with Outstanding Balances";
-        document.getElementById('p-thead').innerHTML = "<tr><th>Customer Name</th><th>Phone</th><th>Balance (QAR)</th></tr>";
+        document.getElementById('print-title').innerText = "MASTER OUTSTANDING LIST";
+        document.getElementById('p-info').innerHTML = `<b>Report Date:</b> ${fDate(new Date().toISOString().split('T')[0])}`;
+        document.getElementById('p-thead').innerHTML = "<tr><th>Customer Name</th><th>Contact Number</th><th>Outstanding Due</th></tr>";
         document.getElementById('p-tbody').innerHTML = db.c.filter(c => c.bal > 0).map(c => `<tr><td>${c.n}</td><td>${c.ph}</td><td class="red-text">QAR ${c.bal.toFixed(2)}</td></tr>`).join('');
-        document.getElementById('p-total').innerText = "Grand Total: QAR " + db.c.reduce((a,b)=>a+b.bal,0).toFixed(2);
+        document.getElementById('p-total').innerText = "Total Business Debt: QAR " + db.c.reduce((a,b)=>a+b.bal,0).toFixed(2);
         window.print();
     }
 
     function printStatement(cid) {
         const c = db.c.find(x => x.id === cid);
         document.getElementById('print-title').innerText = "STATEMENT OF ACCOUNT";
-        document.getElementById('p-info').innerHTML = `<b>Customer:</b> ${c.n} <br> <b>Contact:</b> ${c.ph}`;
-        document.getElementById('p-thead').innerHTML = "<tr><th>Date</th><th>Description</th><th>Amount</th></tr>";
-        document.getElementById('p-tbody').innerHTML = c.h.map(h => `<tr><td>${fDate(h.d)}</td><td>${h.desc}</td><td class="${h.t==='due'?'red-text':''}">${h.t==='due'?'':'-'}${h.a.toFixed(2)}</td></tr>`).join('');
-        document.getElementById('p-total').innerText = "Balance Due: QAR " + c.bal.toFixed(2);
+        document.getElementById('p-info').innerHTML = `
+            <b>Client:</b> ${c.n} <br>
+            <b>Phone:</b> ${c.ph} <br>
+            <b>ID/Doc:</b> ${c.qid || '-'} (${c.idType || '-'})
+        `;
+        document.getElementById('p-thead').innerHTML = "<tr><th>Date</th><th>Description</th><th>Debit (Due)</th><th>Credit (Paid)</th></tr>";
+        document.getElementById('p-tbody').innerHTML = c.h.map(h => `<tr><td>${fDate(h.d)}</td><td>${h.desc}</td><td class="red-text">${h.t==='due'?h.a.toFixed(2):''}</td><td style="color:green">${h.t==='pay'?h.a.toFixed(2):''}</td></tr>`).join('');
+        document.getElementById('p-total').innerText = "TOTAL AMOUNT DUE: QAR " + c.bal.toFixed(2);
         window.print();
     }
 
@@ -274,20 +307,27 @@
         document.getElementById('clist').innerHTML = db.c.map(c => `
             <div class="cust-row" onclick="this.querySelector('.actions').style.display='block'">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div style="text-align:left;"><b>${c.n}</b><br><small>${c.ph}</small></div>
+                    <div style="text-align:left;"><b>${c.n}</b><br><small>${c.ph} | ${c.qid || ''}</small></div>
                     <div class="red-text">QAR ${c.bal.toFixed(2)}</div>
                 </div>
-                <div class="actions" style="display:none; margin-top:15px; border-top:1px solid #eee; padding-top:10px;">
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px">
-                        <button class="btn btn-d" onclick="openTxn('due', ${c.id})">+ Add Due</button>
-                        <button class="btn btn-p" onclick="openTxn('pay', ${c.id})">- Add Pay</button>
+                <div class="actions" style="display:none; margin-top:15px; border-top:1px solid #eee; padding-top:15px;">
+                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px">
+                        <button class="btn btn-d" onclick="openTxn('due', ${c.id})">+ Due</button>
+                        <button class="btn btn-p" onclick="openTxn('pay', ${c.id})">+ Pay</button>
+                        <button class="btn btn-s" onclick="settleAccount(${c.id})">Settle</button>
                     </div>
-                    <button class="btn btn-s" style="margin-top:8px" onclick="printStatement(${c.id})">Print Statement</button>
-                    ${c.file ? `<a href="${c.file}" target="_blank" style="display:block; font-size:11px; margin-top:8px">View ID Attachment</a>` : ''}
+                    <button class="btn btn-p" style="margin-top:10px; background:#1e293b;" onclick="printStatement(${c.id})">📄 Generate Bill/Statement</button>
+                    ${c.file ? `<a href="${c.file}" target="_blank" style="display:block; font-size:11px; margin-top:10px; color:var(--p);">📂 View Linked Document</a>` : ''}
                 </div>
             </div>`).join('');
         document.getElementById('st-total').innerText = db.c.reduce((a,b)=>a+b.bal,0).toFixed(2);
-        document.getElementById('ulist').innerHTML = db.u.map(u => `<div style="padding:5px; border-bottom:1px solid #eee; text-align:left;">👤 ${u.n} (${u.u})</div>`).join('');
+        document.getElementById('ulist').innerHTML = db.u.map(u => `<div style="padding:10px; border-bottom:1px solid #eee; text-align:left;">👤 ${u.n} (${u.u})</div>`).join('');
+    }
+
+    function renderHistory() {
+        let all = []; db.c.forEach(c => c.h.forEach(h => all.push({...h, cn: c.n})));
+        all.sort((a,b) => b.id - a.id);
+        document.getElementById('full-history-body').innerHTML = all.slice(0, 30).map(h => `<tr><td>${fDate(h.d)}</td><td>${h.cn}</td><td>${h.desc}</td><td class="${h.t==='due'?'red-text':''}" style="color:${h.t==='due'?'red':'green'}">${h.a.toFixed(2)}</td></tr>`).join('');
     }
 
     function search(q) {
@@ -295,9 +335,22 @@
         document.querySelectorAll('.cust-row').forEach(r => r.style.display = r.innerText.toLowerCase().includes(q) ? 'block' : 'none');
     }
 
-    function wipeData() { if(confirm("This will delete ALL data. Proceed?")) { db = {c:[], u:[{n:'Admin', u:'admin', p:'123455'}]}; sync(); location.reload(); } }
+    function wipeData() { if(confirm("This will erase EVERYTHING permanently. Continue?")) { db = {c:[], u:[{n:'Admin', u:'admin', p:'123455'}]}; sync(); location.reload(); } }
 
+    // On Load
+    const local = localStorage.getItem('dtt_db');
+    if(local) { db = JSON.parse(local); render(); }
     sync(false);
 </script>
+
+<div id="login-screen" style="position:fixed; inset:0; background:var(--p); z-index:9999; display:flex; align-items:center; justify-content:center;">
+    <div style="background:white; padding:40px; border-radius:20px; width:90%; max-width:350px; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+        <h2 style="color:var(--p); margin-bottom:20px;">DTT AZIZIYA ACCESS</h2>
+        <input type="text" id="l-user" placeholder="Login Username">
+        <input type="password" id="l-pass" placeholder="Password">
+        <button class="btn btn-p" onclick="login()">Open Dashboard</button>
+    </div>
+</div>
+
 </body>
 </html>
