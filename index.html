@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DTT - AZIZIYA ULTIMATE SYSTEM</title>
     <style>
-        :root { --p: #0f6e56; --s: #d4af37; --bg: #f1f5f9; --txt: #1e293b; --err: #be123c; --success: #16a34a; }
+        :root { --p: #0f6e56; --s: #d4af37; --bg: #f1f5f9; --txt: #1e293b; --err: #be123c; --success: #16a34a; --wa: #25D366; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; color: var(--txt); }
         
         @media print {
@@ -37,6 +37,7 @@
         .btn-p { background: var(--p); color: white; }
         .btn-d { background: var(--err); color: white; }
         .btn-s { background: var(--s); color: white; }
+        .btn-wa { background: var(--wa); color: white; }
         .btn-outline { background: white; color: var(--p); border: 2px solid var(--p); }
         
         table { width: 100%; border-collapse: collapse; font-size: 11px; }
@@ -83,7 +84,7 @@
     <div class="header">
         <div id="sync-indicator" class="sync-status">Connected</div>
         <h1 style="margin:0; font-size:20px;">Doha Technical Trading W.L.L</h1>
-        <p style="margin:5px 0 0; font-size:12px; opacity:0.8;">Aziziya Branch | Mobile: 66682315</p>
+        <p style="margin:5px 0 0; font-size:12px; opacity:0.8;">Aziziya Branch | Cloud System</p>
     </div>
 
     <div class="nav">
@@ -96,7 +97,7 @@
 
     <div id="pg-dash" class="pg" style="display:block">
         <div class="stats">
-            <div class="card"><h2 id="st-total" style="color:var(--p); margin:0;">0.00</h2><small>Total Debt (QAR)</small></div>
+            <div class="card"><h2 id="st-total" style="color:var(--err); margin:0;">0.00</h2><small>Total Debt (QAR)</small></div>
             <div class="card"><h2 id="st-count" style="margin:0;">0</h2><small>Active Clients</small></div>
         </div>
         <button class="btn btn-p" onclick="openM('cust')" style="padding:15px; font-size:16px;">+ Register New Customer</button>
@@ -126,10 +127,15 @@
                     <small>Credit Given Out:</small>
                     <h3 style="color:var(--err)" id="rep-out">QAR 0.00</h3>
                 </div>
-                <div class="rep-box" style="border-left-color:var(--p)">
+                <div class="rep-box" style="border-left-color:var(--success)">
                     <small>Payments Received:</small>
-                    <h3 style="color:var(--p)" id="rep-in">QAR 0.00</h3>
+                    <h3 style="color:var(--success)" id="rep-in">QAR 0.00</h3>
                 </div>
+                <hr>
+                <h4 style="margin:15px 0 5px">New Debtors This Month:</h4>
+                <div id="rep-new-cust" style="font-size:12px; color:#666"></div>
+                <h4 style="margin:15px 0 5px">Accounts Settled This Month:</h4>
+                <div id="rep-settled-cust" style="font-size:12px; color:#666"></div>
             </div>
         </div>
     </div>
@@ -146,13 +152,6 @@
             </div>
         </div>
         
-        <div class="card" style="text-align:left; margin-bottom:15px;">
-            <h3>Manual Backup</h3>
-            <button class="btn btn-s" onclick="exportData()" style="margin-bottom:10px;">Generate Backup Code</button>
-            <button class="btn btn-outline" onclick="importData()">Import Backup Code</button>
-            <textarea id="backup-code" style="display:none; margin-top:10px; font-size:10px; height:60px;" readonly></textarea>
-        </div>
-
         <div class="card admin-only" style="border-top:3px solid var(--err); text-align:left;">
             <h3 style="color:var(--err)">Master Format</h3>
             <button class="btn btn-d" onclick="wipeSystem()">Format All Data</button>
@@ -166,8 +165,9 @@
     <input type="text" id="nc-phone" placeholder="Mobile Number">
     <input type="text" id="nc-nation" placeholder="Nationality">
     <input type="text" id="nc-id" placeholder="QID / Passport Number">
+    <textarea id="nc-desc" placeholder="Notes (e.g. Address, Reference)"></textarea>
     <button class="btn btn-p" onclick="saveCust()">Register</button>
-    <button class="btn" style="margin-top:10px" onclick="closeM('cust')">Cancel</button>
+    <button class="btn" style="margin-top:10px; background:#e2e8f0;" onclick="closeM('cust')">Cancel</button>
 </div></div>
 
 <div id="m-txn" class="modal"><div class="modal-box">
@@ -177,7 +177,7 @@
     <label style="font-size:12px">Issue Date:</label>
     <input type="date" id="tx-date">
     <button id="tx-btn" class="btn"></button>
-    <button class="btn" style="margin-top:10px" onclick="closeM('txn')">Cancel</button>
+    <button class="btn" style="margin-top:10px; background:#e2e8f0;" onclick="closeM('txn')">Cancel</button>
 </div></div>
 
 <div id="m-edit" class="modal"><div class="modal-box">
@@ -189,14 +189,15 @@
     <label style="font-size:12px">Description:</label>
     <textarea id="ed-desc"></textarea>
     <button class="btn btn-p" onclick="processEdit()">Apply Changes</button>
-    <button class="btn" style="margin-top:10px" onclick="closeM('edit')">Cancel</button>
+    <button class="btn" style="margin-top:10px; background:#e2e8f0;" onclick="closeM('edit')">Cancel</button>
 </div></div>
 
 <script>
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwwL7UvDDb1vb9NdQjceefNPab9Cbnmk-aoYUaOYLF1Wj6j_TwhwBEDvK37KA8rwUMlvg/exec'; 
-    const DB_KEY = 'dtt_aziziya_vFinal';
+    const DB_KEY = 'dtt_ultimate_master';
     
-    let db = JSON.parse(localStorage.getItem(DB_KEY)) || { c: [], u: [{n: 'Admin', u: 'admin', p: '123456'}] };
+    // Admin strict password check initialization
+    let db = JSON.parse(localStorage.getItem(DB_KEY)) || { c: [], u: [{n: 'Admin', u: 'admin', p: '123455'}] };
     let currentUser = "Admin", currentUsername = "admin", actCid = null, actTxId = null;
     const todayStr = new Date().toISOString().split('T')[0];
 
@@ -206,14 +207,20 @@
         try {
             await fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', headers: {'Content-Type':'application/json'}, body: JSON.stringify(db) });
             ind.innerText = "Cloud Synced"; ind.style.color = "white";
-        } catch (e) { ind.innerText = "Offline"; ind.style.color = "red"; }
+        } catch (e) { ind.innerText = "Offline Cache"; ind.style.color = "red"; }
     }
 
     async function pullCloud() {
         try {
             const r = await fetch(WEB_APP_URL);
             const data = await r.json();
-            if(data && data.c) { db = data; save(false); render(); }
+            if(data && data.c) { 
+                db = data; 
+                // Force admin password to remain 123455 in case of bad cloud data
+                let adm = db.u.find(u => u.u === 'admin');
+                if(adm) adm.p = '123455'; 
+                save(false); render(); 
+            }
         } catch(e) {}
     }
 
@@ -245,13 +252,14 @@
 
     function saveCust() {
         const name = document.getElementById('nc-name').value;
-        if(!name) return;
+        if(!name) return alert("Name is required");
         db.c.push({ 
             id: Date.now(), n: name, ph: document.getElementById('nc-phone').value, 
             na: document.getElementById('nc-nation').value, idno: document.getElementById('nc-id').value, 
-            bal: 0, h: [], created: todayStr 
+            desc: document.getElementById('nc-desc').value, bal: 0, h: [], created: todayStr 
         });
         save(); closeM('cust'); render();
+        document.getElementById('nc-name').value = ''; document.getElementById('nc-desc').value = '';
     }
 
     function openTxn(type, cid) {
@@ -263,13 +271,13 @@
         openM('txn', cid);
     }
 
-    function processTxn(type) {
-        const amt = parseFloat(document.getElementById('tx-amt').value);
+    function processTxn(type, forceAmt = null, forceDesc = null) {
+        const amt = forceAmt || parseFloat(document.getElementById('tx-amt').value);
         const c = db.c.find(x => x.id === actCid);
         if(!amt) return;
         c.h.push({ 
             id: Date.now(), d: document.getElementById('tx-date').value || todayStr, 
-            desc: document.getElementById('tx-desc').value || (type==='due'?'Material':'Payment'), 
+            desc: forceDesc || document.getElementById('tx-desc').value || (type==='due'?'Items/Service':'Cash Payment'), 
             t: type === 'due' ? 'DEBIT' : 'CREDIT', a: amt, s: currentUser 
         });
         recalc(c); save(); closeM('txn'); render();
@@ -298,37 +306,101 @@
         recalc(c); save(); closeM('edit'); render(); renderHistory();
     }
 
-    function deleteTxn(cid, txId) {
-        if(confirm("Confirm Delete?")) {
+    function undoTxn(cid, txId) {
+        if(confirm("Confirm Delete? Balance will be adjusted.")) {
             const c = db.c.find(x => x.id === cid);
             c.h = c.h.filter(h => h.id !== txId);
             recalc(c); save(); render(); renderHistory();
         }
     }
 
+    function settleCustomer(cid) {
+        const c = db.c.find(x => x.id === cid);
+        if(c.bal <= 0) return alert("Account is already 0.");
+        if(confirm(`Settle full balance of QAR ${c.bal.toFixed(2)} for ${c.n}?`)) {
+            actCid = cid; processTxn('pay', c.bal, "Full Settlement");
+        }
+    }
+
+    function deleteCustomer(cid) {
+        if(currentUsername !== 'admin') return alert("Admin only");
+        if(confirm("Permanently delete this customer and all history?")) {
+            db.c = db.c.filter(x => x.id !== cid); save(); render();
+        }
+    }
+
+    function deleteStaff(user) {
+        if(user === 'admin') return alert("Cannot delete main Admin");
+        if(confirm(`Delete staff member ${user}?`)) {
+            db.u = db.u.filter(x => x.u !== user); save(); render();
+        }
+    }
+
+    function sendWhatsApp(cid) {
+        const c = db.c.find(x => x.id === cid);
+        let msg = `*Doha Technical Trading W.L.L*\n_Aziziya Branch_\n\n*Statement of Account*\nCustomer: ${c.n}\nOutstanding Balance: *QAR ${c.bal.toFixed(2)}*\n\n*Recent Activity:*\n`;
+        c.h.slice(-5).forEach(h => {
+            let icon = h.t === 'DEBIT' ? '🔴' : '🟢';
+            let typeStr = h.t === 'DEBIT' ? 'Due' : 'Paid';
+            msg += `${icon} ${h.d}: ${h.desc} - QAR ${h.a} (${typeStr})\n`;
+        });
+        msg += `\nThank you for your business!`;
+        let phone = c.ph.replace(/\D/g, '');
+        if(phone.length === 8) phone = '974' + phone;
+        window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+    }
+
+    function printStatement(cid) {
+        const c = db.c.find(x => x.id === cid);
+        document.getElementById('p-info').innerHTML = `<b>Customer Name:</b> ${c.n}<br><b>Phone:</b> ${c.ph || '-'}<br><b>Nationality:</b> ${c.na || '-'} | <b>QID/ID:</b> ${c.idno || '-'}<br><b>Notes:</b> ${c.desc || '-'}`;
+        document.getElementById('p-tbody').innerHTML = c.h.map(h => `<tr><td>${h.d}</td><td>${h.desc}</td><td style="color:red">${h.t==='DEBIT'?h.a.toFixed(2):'-'}</td><td style="color:green">${h.t==='CREDIT'?h.a.toFixed(2):'-'}</td></tr>`).join('');
+        document.getElementById('p-total').innerHTML = `Outstanding Balance: <span style="color:${c.bal > 0 ? 'red' : 'green'}">QAR ${c.bal.toFixed(2)}</span>`;
+        window.print();
+    }
+
     function render() {
-        document.getElementById('clist').innerHTML = db.c.map(c => `
-            <div class="cust-row">
+        document.getElementById('clist').innerHTML = db.c.map(c => {
+            let balColor = c.bal > 0 ? 'var(--err)' : 'var(--success)';
+            return `
+            <div class="cust-row" style="border-left-color: ${balColor}">
                 <div class="cust-top" onclick="this.parentElement.classList.toggle('open')">
-                    <div><b>${c.n}</b><br><small>${c.ph || ''} | ${c.na || ''}</small></div>
-                    <div style="color:var(--err); font-weight:800;">QAR ${c.bal.toFixed(2)}</div>
+                    <div><b>${c.n}</b><br><small>${c.ph || 'No Phone'} | ${c.na || ''}</small></div>
+                    <div style="color:${balColor}; font-weight:800; font-size:16px;">QAR ${c.bal.toFixed(2)}</div>
                 </div>
                 <div class="cust-body">
-                    <p style="font-size:12px; color:#555"><b>ID:</b> ${c.idno || 'Not Provided'}</p>
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    <p style="font-size:12px; color:#555; margin-top:0;"><b>QID:</b> ${c.idno || '-'} | <b>Notes:</b> ${c.desc || '-'}</p>
+                    
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
                         <button class="btn btn-d" onclick="openTxn('due', ${c.id})">Add Due</button>
-                        <button class="btn btn-p" onclick="openTxn('pay', ${c.id})">Receive Pay</button>
+                        <button class="btn btn-p" style="background:var(--success)" onclick="openTxn('pay', ${c.id})">Receive Pay</button>
                     </div>
-                    <button class="btn btn-s" onclick="printR(${c.id})" style="width:100%; margin-top:10px;">📄 Print Statement</button>
-                    <table style="margin-top:10px;">
-                        ${c.h.slice(-5).reverse().map(h => `<tr><td>${h.d}</td><td>${h.desc}</td><td align="right">${h.a.toFixed(2)}</td></tr>`).join('')}
+                    
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+                        <button class="btn btn-s" onclick="printStatement(${c.id})">📄 PDF Print</button>
+                        <button class="btn btn-wa" onclick="sendWhatsApp(${c.id})">💬 WhatsApp</button>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px;">
+                        <button class="btn btn-outline" onclick="settleCustomer(${c.id})">✔ Settle Account</button>
+                        <button class="btn btn-d admin-only" style="opacity:0.8" onclick="deleteCustomer(${c.id})">🗑 Delete Profile</button>
+                    </div>
+
+                    <table style="background:white; border-radius:5px;">
+                        ${c.h.slice(-5).reverse().map(h => `<tr><td>${h.d}</td><td>${h.desc}</td><td align="right" style="color:${h.t==='DEBIT'?'red':'green'}"><b>${h.t==='DEBIT'?'+':'-'} ${h.a.toFixed(2)}</b></td>
+                        <td align="right"><button class="tool-btn" onclick="openEdit(${c.id}, ${h.id})">✏️</button><button class="tool-btn" style="color:red" onclick="undoTxn(${c.id}, ${h.id})">🗑️</button></td></tr>`).join('')}
                     </table>
                 </div>
-            </div>
-        `).join('');
+            </div>`
+        }).join('');
         document.getElementById('st-total').innerText = db.c.reduce((s,x)=>s+x.bal,0).toFixed(2);
         document.getElementById('st-count').innerText = db.c.length;
-        document.getElementById('ulist').innerHTML = db.u.map(u => `<div style="padding:5px 0">• <b>${u.n}</b> (${u.u})</div>`).join('');
+        
+        document.getElementById('ulist').innerHTML = db.u.map(u => `
+            <div style="padding:10px; background:white; margin-bottom:5px; border-radius:5px; display:flex; justify-content:space-between; align-items:center;">
+                <span><b>${u.n}</b> (${u.u})</span>
+                ${currentUsername === 'admin' && u.u !== 'admin' ? `<button class="btn btn-d" style="width:auto; padding:5px 10px;" onclick="deleteStaff('${u.u}')">Delete</button>` : ''}
+            </div>
+        `).join('');
     }
 
     function renderHistory() {
@@ -344,45 +416,36 @@
                 <td>${h.s}</td>
                 <td class="action-btns">
                     <button class="tool-btn" onclick="openEdit(${h.cid}, ${h.id})">✏️</button>
-                    <button class="tool-btn" style="color:red" onclick="deleteTxn(${h.cid}, ${h.id})">🗑️</button>
+                    <button class="tool-btn" style="color:red" onclick="undoTxn(${h.cid}, ${h.id})">🗑️</button>
                 </td>
             </tr>
         `).join('');
     }
 
-    function printR(cid) {
-        const c = db.c.find(x => x.id === cid);
-        document.getElementById('p-info').innerHTML = `<b>Customer Name:</b> ${c.n} <br><b>Mobile Number:</b> ${c.ph}<br><b>ID Number:</b> ${c.idno}`;
-        document.getElementById('p-tbody').innerHTML = c.h.map(h => `<tr><td>${h.d}</td><td>${h.desc}</td><td>${h.t==='DEBIT'?h.a.toFixed(2):'-'}</td><td>${h.t==='CREDIT'?h.a.toFixed(2):'-'}</td></tr>`).join('');
-        document.getElementById('p-total').innerText = "Total Outstanding: QAR " + c.bal.toFixed(2);
-        window.print();
-    }
-
     function genReport() {
         const m = document.getElementById('rep-month').value;
         if(!m) return;
-        let out = 0, inc = 0;
-        db.c.forEach(c => c.h.forEach(h => { if(h.d.startsWith(m)) { if(h.t==='DEBIT') out+=h.a; else inc+=h.a; } }));
+        let d=0, p=0, nc=[], settled=[];
+        db.c.forEach(c => {
+            if(c.created && c.created.startsWith(m)) nc.push(c.n);
+            let hadDebt = false;
+            c.h.forEach(h => { 
+                if(h.d.startsWith(m)) { 
+                    if(h.t==='DEBIT') { d+=h.a; hadDebt=true; } else { p+=h.a; } 
+                } 
+            });
+            if(c.bal <= 0 && c.h.some(h => h.d.startsWith(m) && h.t === 'CREDIT')) settled.push(c.n);
+        });
         document.getElementById('rep-results').style.display = 'block';
-        document.getElementById('rep-out').innerText = "QAR " + out.toFixed(2);
-        document.getElementById('rep-in').innerText = "QAR " + inc.toFixed(2);
-    }
-
-    function exportData() {
-        const code = btoa(encodeURIComponent(JSON.stringify(db)));
-        document.getElementById('backup-code').style.display = 'block';
-        document.getElementById('backup-code').value = code;
-        alert("Backup Code generated!");
-    }
-
-    function importData() {
-        const code = prompt("Paste Code:");
-        if(code) { try { db = JSON.parse(decodeURIComponent(atob(code))); save(); location.reload(); } catch(e) { alert("Invalid Code"); } }
+        document.getElementById('rep-out').innerText = "QAR " + d.toFixed(2);
+        document.getElementById('rep-in').innerText = "QAR " + p.toFixed(2);
+        document.getElementById('rep-new-cust').innerText = nc.length ? nc.join(", ") : "None";
+        document.getElementById('rep-settled-cust').innerText = settled.length ? settled.join(", ") : "None";
     }
 
     function addUser() {
         const n = document.getElementById('nu-name').value, u = document.getElementById('nu-user').value, p = document.getElementById('nu-pass').value;
-        if(n && u && p) { db.u.push({n, u, p}); save(); render(); }
+        if(n && u && p) { db.u.push({n, u, p}); save(); render(); document.getElementById('nu-name').value=''; document.getElementById('nu-user').value=''; document.getElementById('nu-pass').value='';}
     }
 
     function search(q) {
@@ -391,9 +454,9 @@
     }
 
     function wipeSystem() {
-        if(prompt("Type '123456' to format:") === "123456") {
-            db = { c: [], u: [{n: 'Admin', u: 'admin', p: '123456'}] }; save(); location.reload();
-        }
+        if(prompt("WARNING: Type '123455' to FORMAT ALL DATA:") === "123455") {
+            db = { c: [], u: [{n: 'Admin', u: 'admin', p: '123455'}] }; save(); location.reload();
+        } else { alert("Incorrect Admin Password."); }
     }
 </script>
 </body>
