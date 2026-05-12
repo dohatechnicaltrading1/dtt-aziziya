@@ -783,9 +783,21 @@ function saveLocal(){
 function loadLocal(){
   try{
     const d = localStorage.getItem(LS_KEY);
-    if(d){ const p = JSON.parse(d); if(p && p.customers) db = p; }
+    if(d){
+      const p = JSON.parse(d);
+      if(p && p.customers) {
+        // Merge: keep stored data but always ensure users array is valid
+        db.customers = p.customers || [];
+        db.activityLog = p.activityLog || [];
+        // Only use stored users if they exist and have entries
+        if(p.users && p.users.length > 0) {
+          db.users = p.users;
+        }
+        // else db.users keeps the hardcoded defaults above
+      }
+    }
     if(!db.activityLog) db.activityLog = [];
-  } catch(e){}
+  } catch(e){ console.error('loadLocal error:', e); }
 }
 
 function setSyncStatus(status){
@@ -803,7 +815,22 @@ async function syncNow(){
     const cloud = await res.json();
     if(cloud && cloud.customers){
       db.customers = cloud.customers;
-      if(cloud.users && cloud.users.length) db.users = cloud.users;
+      // Smart user merge: cloud users take priority, but
+      // if cloud only has the 2 default accounts and we have more locally, keep local
+      if(cloud.users && cloud.users.length > 0){
+        const cloudHasCustomUsers = cloud.users.some(u => u.id !== 'u1' && u.id !== 'u2');
+        const localHasCustomUsers = db.users.some(u => u.id !== 'u1' && u.id !== 'u2');
+        if(cloudHasCustomUsers){
+          // Cloud has real custom users — trust cloud
+          db.users = cloud.users;
+        } else if(localHasCustomUsers){
+          // Cloud only has defaults but local has custom users
+          // Push local users to cloud on next save, keep local
+          // (don't overwrite local custom users with stale cloud defaults)
+        } else {
+          db.users = cloud.users;
+        }
+      }
       if(cloud.activityLog) db.activityLog = cloud.activityLog;
       if(!db.activityLog) db.activityLog = [];
       saveLocal(); renderAll();
@@ -1270,15 +1297,17 @@ function addStaff(){
   if(password.length<6){err.textContent='Password min 6 characters.';return;}
   if(db.users.find(u=>u.username===username)){err.textContent='Username already exists.';return;}
   db.users.push({id:uid(),name,username,password,role});
-  pushToCloud();
+  saveLocal(); // Save immediately to localStorage first
+  pushToCloud(); // Then push to cloud
   ['nu-name','nu-user','nu-pass'].forEach(i=>document.getElementById(i).value='');
   err.textContent='';
   renderStaff();
-  showToast('@'+username+' account created!');
+  showToast('@'+username+' account created! They can now login.');
 }
 function removeStaff(id){
   if(!confirm('Remove this staff account?')) return;
   db.users=db.users.filter(u=>u.id!==id);
+  saveLocal();
   pushToCloud(); renderStaff();
 }
 function wipeAll(){
