@@ -645,6 +645,7 @@ html,body{height:100%;font-family:var(--ff);background:var(--canvas);color:var(-
       </div>
       <input type="file" id="file-input" accept="image/*,.pdf" onchange="handleFileSelect(this)"/>
     </div>
+    <div class="mf"><label>Reference (Referred by)</label><input type="text" id="nc-ref" placeholder="e.g. Mohammed Ali, Walk-in, Company name..."/></div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeSheet('m-cust')">Cancel</button>
       <button class="btn btn-primary" onclick="saveCustomer()">
@@ -896,7 +897,7 @@ function setPage(p){
 ═══════════════════════════════════════════ */
 function openSheet(id){
   if(id==='m-cust'){
-    ['nc-name','nc-phone','nc-notes'].forEach(i=>{ const el=document.getElementById(i); if(el) el.value=''; });
+    ['nc-name','nc-phone','nc-notes','nc-ref'].forEach(i=>{ const el=document.getElementById(i); if(el) el.value=''; });
     const natEl = document.getElementById('nc-nationality');
     if(natEl) natEl.value = '';
     clearUpload();
@@ -972,7 +973,8 @@ async function saveCustomer(){
   }
 
   const serial = nextSerial();
-  const newCust = { id:uid(), serial, name, phone, notes, nationality, fileUrl, due:0, transactions:[], createdAt:today(), createdBy:currentUser.name };
+  const ref = document.getElementById('nc-ref').value.trim();
+  const newCust = { id:uid(), serial, name, phone, notes, nationality, ref, fileUrl, due:0, transactions:[], createdAt:today(), createdBy:currentUser.name };
   db.customers.push(newCust);
   addActivity('New customer registered: ' + serial + ' — ' + name, currentUser.name);
   pushToCloud();
@@ -1230,6 +1232,7 @@ function renderCusts(){
           <div class="cust-serial">${c.serial}</div>
           <div class="cust-name">${c.name}</div>
           <div class="cust-phone">${c.phone||'No phone'}${c.nationality?' · '+c.nationality:''}</div>
+          ${c.ref?`<div style="font-size:10px;color:var(--sapphire-m);font-weight:600;margin-top:2px">Ref: ${c.ref}</div>`:''}
         </div>
         <div class="cust-due-block">
           <div class="cust-due-lbl">Due</div>
@@ -1381,7 +1384,7 @@ function printCustomerStatement(cid){
   pt.innerHTML = buildPrintHeader('Customer Account Statement') + `
       <table style="width:100%;margin-bottom:10px;border-collapse:collapse">
         <tr><td style="padding:4px 0;font-size:13px"><b>Customer Name:</b> ${c.name}</td><td style="padding:4px 0;font-size:13px"><b>Serial:</b> ${c.serial}</td></tr>
-        <tr><td style="padding:4px 0;font-size:13px"><b>Mobile:</b> ${c.phone||'—'}</td><td style="padding:4px 0;font-size:13px"><b>Customer Since:</b> ${c.createdAt}</td></tr>
+        <tr><td style="padding:4px 0;font-size:13px"><b>Mobile:</b> ${c.phone||'—'}</td><td style="padding:4px 0;font-size:13px"><b>Reference:</b> ${c.ref||'—'}</td></tr>
         <tr><td style="padding:4px 0;font-size:13px"><b>Statement Date:</b> ${today()}</td></tr>
       </table>
       <table><thead><tr>
