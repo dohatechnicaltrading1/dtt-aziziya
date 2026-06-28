@@ -1490,142 +1490,129 @@ function buildBillHTML(c){
   const totDue = c.transactions.filter(t=>t.type==='due').reduce((s,t)=>s+t.amt,0);
   const totPay = c.transactions.filter(t=>t.type==='pay').reduce((s,t)=>s+t.amt,0);
   const txns   = [...c.transactions].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
-  const rows = txns.map(t=>`
+
+  const rows = txns.map((t,i)=>`
     <tr>
-      <td style="padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px;color:#555;white-space:nowrap">${toDisplay(t.date)||'—'}</td>
-      <td style="padding:9px 12px;border-bottom:1px solid #f0f0f0">
-        <span style="display:inline-block;padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700;letter-spacing:.04em;${t.type==='due'?'background:#fff0f0;color:#be123c':'background:#f0fdf4;color:#065f46'}">${t.type==='due'?'CREDIT':'PAYMENT'}</span>
-      </td>
-      <td style="padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px;color:#333">${t.desc||'—'}</td>
-      <td style="padding:9px 12px;border-bottom:1px solid #f0f0f0;text-align:right;font-size:13px;font-weight:700;color:${t.type==='due'?'#be123c':'#065f46'}">${t.type==='due'?'+':'-'}${qar(t.amt)}</td>
+      <td style="padding:8px 12px;font-size:11px;color:#1a1a1a;border-bottom:1px solid #ebebeb;width:95px">${toDisplay(t.date)||'—'}</td>
+      <td style="padding:8px 12px;font-size:11px;border-bottom:1px solid #ebebeb;width:80px;font-weight:600;color:${t.type==='due'?'#990000':'#1a5c38'};letter-spacing:.02em">${t.type==='due'?'DEBIT':'CREDIT'}</td>
+      <td style="padding:8px 12px;font-size:11px;color:#333;border-bottom:1px solid #ebebeb">${t.desc||'General'}</td>
+      <td style="padding:8px 12px;font-size:11px;text-align:right;border-bottom:1px solid #ebebeb;width:120px;font-weight:600;color:${t.type==='due'?'#990000':'#1a5c38'};font-family:'Courier New',monospace">${t.type==='due'?'('+qar(t.amt)+')':qar(t.amt)}</td>
     </tr>`).join('');
 
-  return `
-  <div style="font-family:'Segoe UI',Arial,sans-serif;background:#fff;width:794px;margin:0 auto;min-height:1123px;position:relative;overflow:hidden">
+  const statementNo = 'STM-' + c.serial + '-' + new Date().getFullYear();
 
-    <!-- TOP HEADER BAND -->
-    <div style="background:linear-gradient(135deg,#064e3b 0%,#065f46 60%,#047857 100%);padding:36px 44px 28px;position:relative;overflow:hidden">
-      <!-- Decorative circles -->
-      <div style="position:absolute;right:-30px;top:-30px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.06)"></div>
-      <div style="position:absolute;right:60px;top:30px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.04)"></div>
-      <div style="position:absolute;left:-20px;bottom:-40px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.04)"></div>
+  return `<div style="font-family:'Times New Roman',Georgia,serif;background:#fff;width:720px;margin:0 auto;color:#1a1a1a">
 
-      <div style="display:flex;align-items:center;justify-content:space-between;position:relative;z-index:1">
-        <!-- Brand -->
-        <div style="display:flex;align-items:center;gap:16px">
-          <div style="width:56px;height:56px;background:rgba(255,255,255,.15);border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
-              <polyline points="9 22 9 12 15 12 15 22"/>
-            </svg>
-          </div>
-          <div>
-            <div style="font-size:20px;font-weight:700;color:#fff;letter-spacing:.01em;line-height:1.2">Doha Technical Trading</div>
-            <div style="font-size:12px;color:rgba(255,255,255,.7);margin-top:3px;letter-spacing:.02em">W.L.L</div>
+    <!-- ── LETTERHEAD ── -->
+    <div style="padding:32px 44px 0;border-bottom:2px solid #1a1a1a">
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;padding-bottom:16px">
+
+        <!-- Left: Company -->
+        <div>
+          <div style="font-size:22px;font-weight:700;letter-spacing:.04em;color:#0a3d2e;font-family:Arial,sans-serif;line-height:1">DOHA TECHNICAL TRADING</div>
+          <div style="font-size:11px;letter-spacing:.12em;color:#555;margin-top:3px;font-family:Arial,sans-serif">W.L.L</div>
+          <div style="margin-top:10px;font-size:10px;color:#555;line-height:1.9;font-family:Arial,sans-serif">
+            Al Aziziya, Doha, State of Qatar<br>
+            Tel: +974 66682315<br>
+            C.R. No.: Doha
           </div>
         </div>
-        <!-- Contact -->
-        <div style="text-align:right">
-          <div style="font-size:11px;color:rgba(255,255,255,.6);margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em">Contact</div>
-          <div style="font-size:13px;color:#fff;font-weight:500">+974 66682315</div>
-          <div style="font-size:12px;color:rgba(255,255,255,.7);margin-top:2px">Al Aziziya, Qatar</div>
-        </div>
-      </div>
 
-      <!-- STATEMENT label -->
-      <div style="margin-top:22px;position:relative;z-index:1">
-        <span style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;font-size:11px;font-weight:700;letter-spacing:.12em;padding:5px 16px;border-radius:4px;text-transform:uppercase">Account Statement</span>
-        <span style="float:right;color:rgba(255,255,255,.65);font-size:11px;margin-top:4px">Date: ${today()}</span>
-      </div>
-    </div>
-
-    <!-- GOLD ACCENT LINE -->
-    <div style="height:4px;background:linear-gradient(90deg,#d97706,#f59e0b,#fcd34d,#f59e0b,#d97706)"></div>
-
-    <!-- CUSTOMER INFO CARD -->
-    <div style="padding:24px 44px 0">
-      <div style="background:#f8fafc;border-radius:12px;border:1px solid #e2e8f0;padding:20px 24px;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px">
-        <div style="display:flex;align-items:center;gap:16px">
-          <!-- Avatar circle -->
-          <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#065f46,#047857);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#fff;flex-shrink:0;font-family:Georgia,serif">
-            ${(c.name||'?').trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase()}
+        <!-- Right: Statement Info -->
+        <div style="text-align:right;font-family:Arial,sans-serif">
+          <div style="font-size:28px;font-weight:700;color:#0a3d2e;letter-spacing:.05em;line-height:1">ACCOUNT</div>
+          <div style="font-size:28px;font-weight:700;color:#0a3d2e;letter-spacing:.05em;line-height:1">STATEMENT</div>
+          <div style="margin-top:12px;display:grid;grid-template-columns:auto auto;gap:2px 12px;text-align:right">
+            <span style="font-size:9px;color:#888;text-transform:uppercase;letter-spacing:.06em;text-align:left">Statement No.</span>
+            <span style="font-size:10px;font-weight:700;color:#1a1a1a">${statementNo}</span>
+            <span style="font-size:9px;color:#888;text-transform:uppercase;letter-spacing:.06em;text-align:left">Date Issued</span>
+            <span style="font-size:10px;font-weight:700;color:#1a1a1a">${today()}</span>
+            <span style="font-size:9px;color:#888;text-transform:uppercase;letter-spacing:.06em;text-align:left">Account Ref.</span>
+            <span style="font-size:10px;font-weight:700;color:#0a3d2e">${c.serial}</span>
           </div>
-          <div>
-            <div style="font-size:17px;font-weight:700;color:#111;margin-bottom:4px">${c.name}</div>
-            <div style="font-size:12px;color:#555;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-              ${c.phone?`<span>📞 ${c.phone}</span>`:''}
-              ${c.nationality?`<span style="color:#aaa">·</span><span>${c.nationality}</span>`:''}
-            </div>
-            ${c.ref?`<div style="font-size:11px;color:#065f46;font-weight:600;margin-top:4px">Ref: ${c.ref}</div>`:''}
-          </div>
-        </div>
-        <!-- Serial badge -->
-        <div style="text-align:right">
-          <div style="font-size:10px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Account No.</div>
-          <div style="font-size:18px;font-weight:700;color:#065f46;font-family:monospace;letter-spacing:.04em">${c.serial}</div>
         </div>
       </div>
     </div>
 
-    <!-- SUMMARY BOXES -->
-    <div style="padding:20px 44px 0;display:flex;gap:12px">
-      <div style="flex:1;background:#fff8f0;border:1px solid #fed7aa;border-radius:10px;padding:14px 18px;text-align:center">
-        <div style="font-size:10px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Total Credit</div>
-        <div style="font-size:16px;font-weight:700;color:#c2410c">${qar(totDue)}</div>
+    <!-- ── PARTIES ── -->
+    <div style="padding:16px 44px;display:flex;gap:32px;border-bottom:1px solid #ddd;background:#fafafa">
+      <div style="flex:1">
+        <div style="font-size:8px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;font-family:Arial,sans-serif">Issued By</div>
+        <div style="font-size:11px;font-weight:700;color:#1a1a1a;font-family:Arial,sans-serif">Doha Technical Trading W.L.L</div>
+        <div style="font-size:10px;color:#555;line-height:1.8;font-family:Arial,sans-serif">Al Aziziya, Doha, Qatar<br>+974 66682315</div>
       </div>
-      <div style="flex:1;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px 18px;text-align:center">
-        <div style="font-size:10px;font-weight:700;color:#065f46;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Total Paid</div>
-        <div style="font-size:16px;font-weight:700;color:#065f46">${qar(totPay)}</div>
-      </div>
-      <div style="flex:1;background:${c.due>0?'#fff1f2':'#f0fdf4'};border:1px solid ${c.due>0?'#fecdd3':'#bbf7d0'};border-radius:10px;padding:14px 18px;text-align:center">
-        <div style="font-size:10px;font-weight:700;color:${c.due>0?'#be123c':'#065f46'};text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Balance Due</div>
-        <div style="font-size:16px;font-weight:700;color:${c.due>0?'#be123c':'#065f46'}">${qar(c.due)}</div>
+      <div style="width:1px;background:#ddd"></div>
+      <div style="flex:1">
+        <div style="font-size:8px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;font-family:Arial,sans-serif">Account Holder</div>
+        <div style="font-size:13px;font-weight:700;color:#1a1a1a;font-family:Arial,sans-serif">${c.name}</div>
+        <div style="font-size:10px;color:#555;line-height:1.8;font-family:Arial,sans-serif">
+          ${c.phone?'Tel: '+c.phone:''}
+          ${c.nationality?'<br>Nationality: '+c.nationality:''}
+          ${c.ref?'<br>Referred by: '+c.ref:''}
+        </div>
       </div>
     </div>
 
-    <!-- TRANSACTION TABLE -->
+    <!-- ── TRANSACTION TABLE ── -->
     <div style="padding:20px 44px 0">
-      <div style="font-size:11px;font-weight:700;color:#444;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Transaction History</div>
-      <div style="border:1px solid #e5e7eb;border-radius:10px;overflow:hidden">
-        <table style="width:100%;border-collapse:collapse">
-          <thead>
-            <tr style="background:#064e3b">
-              <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:rgba(255,255,255,.85);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap">Date</th>
-              <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:rgba(255,255,255,.85);text-transform:uppercase;letter-spacing:.06em">Type</th>
-              <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:rgba(255,255,255,.85);text-transform:uppercase;letter-spacing:.06em">Description</th>
-              <th style="padding:10px 12px;text-align:right;font-size:10px;font-weight:700;color:rgba(255,255,255,.85);text-transform:uppercase;letter-spacing:.06em">Amount</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${rows||'<tr><td colspan="4" style="padding:20px;text-align:center;color:#aaa;font-size:12px">No transactions recorded</td></tr>'}
-          </tbody>
-        </table>
+      <table style="width:100%;border-collapse:collapse;font-family:Arial,sans-serif">
+        <thead>
+          <tr style="background:#0a3d2e">
+            <th style="padding:10px 12px;text-align:left;font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.08em;border-right:1px solid rgba(255,255,255,.1)">Date</th>
+            <th style="padding:10px 12px;text-align:left;font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.08em;border-right:1px solid rgba(255,255,255,.1)">Type</th>
+            <th style="padding:10px 12px;text-align:left;font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.08em;border-right:1px solid rgba(255,255,255,.1)">Particulars</th>
+            <th style="padding:10px 12px;text-align:right;font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.08em">Amount (QAR)</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows||'<tr><td colspan="4" style="padding:20px;text-align:center;color:#aaa;font-size:11px;font-style:italic">No transactions on record</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ── TOTALS ── -->
+    <div style="padding:0 44px;font-family:Arial,sans-serif">
+      <table style="width:100%;border-collapse:collapse;margin-left:auto">
+        <tr style="border-top:1px solid #ddd">
+          <td style="padding:7px 12px;font-size:10px;color:#555;text-align:right;width:75%">Sub-total (Credits Issued)</td>
+          <td style="padding:7px 12px;font-size:11px;font-weight:600;color:#990000;text-align:right;font-family:'Courier New',monospace">${qar(totDue)}</td>
+        </tr>
+        <tr>
+          <td style="padding:7px 12px;font-size:10px;color:#555;text-align:right">Less: Payments Received</td>
+          <td style="padding:7px 12px;font-size:11px;font-weight:600;color:#1a5c38;text-align:right;font-family:'Courier New',monospace">(${qar(totPay)})</td>
+        </tr>
+        <tr style="background:#0a3d2e">
+          <td style="padding:10px 12px;font-size:11px;font-weight:700;color:#fff;text-align:right;text-transform:uppercase;letter-spacing:.04em">Outstanding Balance Due</td>
+          <td style="padding:10px 12px;font-size:15px;font-weight:700;color:#fff;text-align:right;font-family:'Courier New',monospace">${qar(c.due)}</td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- ── NOTES ── -->
+    <div style="padding:14px 44px 0;font-family:Arial,sans-serif">
+      <div style="border:1px solid #e0e0e0;border-left:3px solid #0a3d2e;padding:10px 14px;background:#f9f9f9">
+        <div style="font-size:9px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Note</div>
+        <div style="font-size:10px;color:#555;line-height:1.6">This statement reflects your current account balance with Doha Technical Trading W.L.L. Kindly arrange payment of the outstanding amount at your earliest convenience. For queries, contact us at +974 66682315.</div>
       </div>
     </div>
 
-    <!-- OUTSTANDING BALANCE BANNER -->
-    <div style="padding:16px 44px">
-      <div style="background:${c.due>0?'linear-gradient(135deg,#7f1d1d,#be123c)':'linear-gradient(135deg,#064e3b,#065f46)'};border-radius:10px;padding:16px 24px;display:flex;justify-content:space-between;align-items:center">
-        <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.85);text-transform:uppercase;letter-spacing:.06em">Outstanding Balance</div>
-        <div style="font-size:24px;font-weight:700;color:#fff">${qar(c.due)}</div>
+    <!-- ── SIGNATURES ── -->
+    <div style="padding:24px 44px 16px;display:flex;justify-content:space-between;font-family:Arial,sans-serif">
+      <div style="width:200px;text-align:center">
+        <div style="height:38px"></div>
+        <div style="border-top:1px solid #1a1a1a;padding-top:6px;font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.06em">Customer Signature &amp; Date</div>
+      </div>
+      <div style="width:200px;text-align:center">
+        <div style="height:38px"></div>
+        <div style="border-top:1px solid #1a1a1a;padding-top:6px;font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.06em">Authorized Signatory</div>
       </div>
     </div>
 
-    <!-- SIGNATURE ROW -->
-    <div style="padding:0 44px;display:flex;justify-content:space-between;margin-top:30px">
-      <div style="text-align:center;flex:1">
-        <div style="border-top:1.5px solid #ccc;padding-top:8px;font-size:11px;color:#888">Customer Signature</div>
-      </div>
-      <div style="width:60px"></div>
-      <div style="text-align:center;flex:1">
-        <div style="border-top:1.5px solid #ccc;padding-top:8px;font-size:11px;color:#888">Authorized Signature</div>
-      </div>
-    </div>
-
-    <!-- FOOTER -->
-    <div style="position:absolute;bottom:0;left:0;right:0;background:#f8fafc;border-top:1px solid #e5e7eb;padding:12px 44px;display:flex;justify-content:space-between;align-items:center">
-      <div style="font-size:10px;color:#aaa">Generated by DTT Due Management System</div>
-      <div style="font-size:10px;color:#aaa">Doha Technical Trading W.L.L &nbsp;·&nbsp; +974 66682315</div>
+    <!-- ── FOOTER RULE ── -->
+    <div style="margin:0 44px;border-top:2px solid #1a1a1a"></div>
+    <div style="padding:8px 44px 24px;display:flex;justify-content:space-between;font-family:Arial,sans-serif">
+      <div style="font-size:9px;color:#888">This is a computer-generated statement.</div>
+      <div style="font-size:9px;color:#888">Doha Technical Trading W.L.L &nbsp;|&nbsp; +974 66682315 &nbsp;|&nbsp; Al Aziziya, Qatar</div>
     </div>
 
   </div>`;
@@ -1636,41 +1623,18 @@ function buildBillHTML(c){
 ═══════════════════════════════════════════ */
 async function generatePDFBlob(c){
   const { jsPDF } = window.jspdf;
-  // Build a hidden render div
   const div = document.createElement('div');
-  div.style.cssText = 'position:fixed;left:-9999px;top:0;width:794px;background:#fff;font-family:Georgia,serif;color:#111;';
+  div.style.cssText = 'position:fixed;left:-9999px;top:0;width:740px;background:#fff;';
   div.innerHTML = buildBillHTML(c);
   document.body.appendChild(div);
   try {
-    const canvas = await html2canvas(div, { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' });
-    const imgData = canvas.toDataURL('image/jpeg', 0.92);
-    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const canvas = await html2canvas(div, { scale:2, useCORS:true, logging:false, backgroundColor:'#ffffff' });
+    const pdf = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
     const pdfW = pdf.internal.pageSize.getWidth();
     const pdfH = pdf.internal.pageSize.getHeight();
-    const ratio = canvas.height / canvas.width;
-    const imgH = pdfW * ratio;
-    let yPos = 0;
-    // Multi-page support
-    if(imgH <= pdfH){
-      pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, imgH);
-    } else {
-      let remaining = imgH;
-      let srcY = 0;
-      while(remaining > 0){
-        const sliceH = Math.min(pdfH, remaining);
-        const sliceCanvas = document.createElement('canvas');
-        sliceCanvas.width = canvas.width;
-        sliceCanvas.height = (sliceH / imgH) * canvas.height;
-        const ctx = sliceCanvas.getContext('2d');
-        ctx.drawImage(canvas, 0, srcY * canvas.height / imgH, canvas.width, sliceCanvas.height, 0, 0, canvas.width, sliceCanvas.height);
-        const sliceData = sliceCanvas.toDataURL('image/jpeg', 0.92);
-        if(yPos > 0) pdf.addPage();
-        pdf.addImage(sliceData, 'JPEG', 0, 0, pdfW, sliceH);
-        srcY += sliceH;
-        remaining -= sliceH;
-        yPos++;
-      }
-    }
+    // Scale to fit single page width, max height = page height
+    const imgH = Math.min(pdfH, pdfW * canvas.height / canvas.width);
+    pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, pdfW, imgH);
     return pdf.output('blob');
   } finally {
     document.body.removeChild(div);
