@@ -7,6 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 /* ═══════════════════════════════════════════
    ROOT TOKENS
@@ -32,14 +34,10 @@ html,body{height:100%;font-family:var(--ff);background:var(--canvas);color:var(-
    PRINT STYLES
 ═══════════════════════════════════════════ */
 @media print{
-  body{background:#fff;font-family:Georgia,serif}
+  body{background:#fff;margin:0;padding:0}
   #app,#login-screen{display:none!important}
   #print-target{display:block!important}
-  .print-page{padding:40px;max-width:800px;margin:0 auto}
-  .print-page table{width:100%;border-collapse:collapse;margin-top:16px}
-  .print-page th{background:#f3f4f6;padding:10px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;border:1px solid #d1d5db}
-  .print-page td{padding:9px 12px;border:1px solid #d1d5db;font-size:12px}
-  .print-page tfoot td{font-weight:700;font-size:13px;background:#f9fafb}
+  @page{margin:0;size:A4}
 }
 #print-target{display:none}
 
@@ -441,10 +439,19 @@ html,body{height:100%;font-family:var(--ff);background:var(--canvas);color:var(-
         <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input type="text" placeholder="Search name, phone, serial…" oninput="filterCusts(this.value)" id="cust-search"/>
       </div>
-      <div class="filter-tabs">
-        <button class="ftab active" onclick="setCustFilter(this,'all')">All</button>
-        <button class="ftab" onclick="setCustFilter(this,'due')">Has Due</button>
-        <button class="ftab" onclick="setCustFilter(this,'clear')">Cleared</button>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+        <div class="filter-tabs" style="margin-bottom:0">
+          <button class="ftab active" onclick="setCustFilter(this,'all')">All</button>
+          <button class="ftab" onclick="setCustFilter(this,'due')">Has Due</button>
+          <button class="ftab" onclick="setCustFilter(this,'clear')">Cleared</button>
+        </div>
+        <select id="cust-sort" onchange="renderCusts()" style="padding:6px 10px;border:1px solid var(--edge2);border-radius:var(--rad);font-family:var(--ff);font-size:12px;color:var(--ink2);background:var(--paper);outline:none;cursor:pointer">
+          <option value="newest">Newest First</option>
+          <option value="oldest">Oldest First</option>
+          <option value="due-high">Due: High → Low</option>
+          <option value="due-low">Due: Low → High</option>
+          <option value="alpha">A → Z</option>
+        </select>
       </div>
       <div class="cust-list" id="cust-list"></div>
     </div>
@@ -786,7 +793,7 @@ let db = {
   customers: [],
   activityLog: [],
   users: [
-    {id:'u1',name:'Admin',username:'admin',password:'admin123',role:'admin'},
+    {id:'u1',name:'Admin',username:'admin',password:'adminisadmin',role:'admin'},
     {id:'u2',name:'Staff',username:'staff',password:'staff123',role:'staff'}
   ]
 };
@@ -1257,6 +1264,14 @@ function renderCusts(){
   });
   if(custFilter==='due') list = list.filter(c=>c.due>0);
   if(custFilter==='clear') list = list.filter(c=>c.due===0);
+  // Sort
+  const sortEl = document.getElementById('cust-sort');
+  const sortVal = sortEl ? sortEl.value : 'newest';
+  if(sortVal==='newest')    list.sort((a,b)=> (b.createdAt||'').localeCompare(a.createdAt||''));
+  else if(sortVal==='oldest') list.sort((a,b)=> (a.createdAt||'').localeCompare(b.createdAt||''));
+  else if(sortVal==='due-high') list.sort((a,b)=> b.due - a.due);
+  else if(sortVal==='due-low')  list.sort((a,b)=> a.due - b.due);
+  else if(sortVal==='alpha')    list.sort((a,b)=> (a.name||'').localeCompare(b.name||''));
   const g = document.getElementById('cust-list');
   if(!list.length){
     g.innerHTML = `<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg><p>No customers found</p></div>`;
@@ -1316,11 +1331,11 @@ function renderCusts(){
             <button class="act-btn ab-gold" onclick="settleAccount('${c.id}')">
               <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Settle All
             </button>
-            <button class="act-btn ab-dark" onclick="printCustomerStatement('${c.id}')">
-              <svg viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg> Print Bill
+            <button class="act-btn ab-dark" onclick="savePDFBill('${c.id}')">
+              <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Save PDF
             </button>
           </div>
-          ${waPhone?`<div style="margin-top:6px"><a href="${waLink}" target="_blank" class="act-btn wa-btn" style="text-decoration:none;background:#DCFCE7;color:#15803D;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border-radius:var(--rad);font-size:12px;font-weight:600;transition:all .15s"><svg viewBox="0 0 24 24" width="14" height="14" style="fill:#15803D;stroke:none"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg> WhatsApp</a></div>`:''}
+          ${waPhone?`<div style="margin-top:6px"><button class="act-btn wa-btn" onclick="sendWhatsAppBill('${c.id}')" style="background:#DCFCE7;color:#15803D;width:100%;border:none;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border-radius:var(--rad);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s"><svg viewBox="0 0 24 24" width="14" height="14" style="fill:#15803D;stroke:none"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg> Send Bill on WhatsApp</button></div>`:''}
           ${c.fileUrl?`<div style="margin-top:6px"><a href="${c.fileUrl}" target="_blank" class="act-btn ab-blue" style="text-decoration:none"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> View Document</a></div>`:''}
           <div style="margin-top:6px"><button class="act-btn" style="background:var(--violet-l);color:var(--violet-m)" onclick="openEditCustomer('${c.id}')"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit Details</button></div>
           ${isAdmin()?`<div style="margin-top:6px"><button class="act-btn" style="background:var(--crimson-l);color:var(--crimson-m)" onclick="deleteCustomer('${c.id}')"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg> Delete Client</button></div>`:''}
@@ -1456,60 +1471,256 @@ function runReport(){
 /* ═══════════════════════════════════════════
    PDF GENERATION (PRINT)
 ═══════════════════════════════════════════ */
-function buildPrintHeader(subtitle){
+
+
+/* ═══════════════════════════════════════════
+   PDF FILENAME HELPER
+═══════════════════════════════════════════ */
+function pdfFileName(c){
+  const safeName = (c.name||'Customer').replace(/[^a-zA-Z0-9؀-ۿ ]/g,'').trim().replace(/\s+/g,'_');
+  return (c.serial||'DTT') + '_' + safeName + '.pdf';
+}
+
+/* ═══════════════════════════════════════════
+   BUILD BILL HTML (shared by print + PDF)
+═══════════════════════════════════════════ */
+function buildPrintHeader(subtitle){ return ''; } // unused — kept for other reports
+
+function buildBillHTML(c){
+  const totDue = c.transactions.filter(t=>t.type==='due').reduce((s,t)=>s+t.amt,0);
+  const totPay = c.transactions.filter(t=>t.type==='pay').reduce((s,t)=>s+t.amt,0);
+  const txns   = [...c.transactions].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  const rows = txns.map(t=>`
+    <tr>
+      <td style="padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px;color:#555;white-space:nowrap">${toDisplay(t.date)||'—'}</td>
+      <td style="padding:9px 12px;border-bottom:1px solid #f0f0f0">
+        <span style="display:inline-block;padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700;letter-spacing:.04em;${t.type==='due'?'background:#fff0f0;color:#be123c':'background:#f0fdf4;color:#065f46'}">${t.type==='due'?'CREDIT':'PAYMENT'}</span>
+      </td>
+      <td style="padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px;color:#333">${t.desc||'—'}</td>
+      <td style="padding:9px 12px;border-bottom:1px solid #f0f0f0;text-align:right;font-size:13px;font-weight:700;color:${t.type==='due'?'#be123c':'#065f46'}">${t.type==='due'?'+':'-'}${qar(t.amt)}</td>
+    </tr>`).join('');
+
   return `
-    <div class="print-page" style="font-family:Georgia,serif;color:#111;max-width:760px;margin:0 auto;padding:40px">
-      <div style="text-align:center;border-bottom:3px double #000;padding-bottom:20px;margin-bottom:20px">
-        <div style="font-size:24px;font-weight:700;letter-spacing:.02em">DOHA TECHNICAL TRADING W.L.L</div>
-        <div style="font-size:13px;color:#444;margin-top:4px">Al Aziziya, Qatar &nbsp;|&nbsp; Mobile: +974 66682315</div>
-        <div style="display:inline-block;background:#000;color:#fff;font-size:11px;font-weight:700;letter-spacing:.1em;padding:4px 16px;border-radius:2px;margin-top:10px;text-transform:uppercase">${subtitle}</div>
-      </div>`;
+  <div style="font-family:'Segoe UI',Arial,sans-serif;background:#fff;width:794px;margin:0 auto;min-height:1123px;position:relative;overflow:hidden">
+
+    <!-- TOP HEADER BAND -->
+    <div style="background:linear-gradient(135deg,#064e3b 0%,#065f46 60%,#047857 100%);padding:36px 44px 28px;position:relative;overflow:hidden">
+      <!-- Decorative circles -->
+      <div style="position:absolute;right:-30px;top:-30px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.06)"></div>
+      <div style="position:absolute;right:60px;top:30px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.04)"></div>
+      <div style="position:absolute;left:-20px;bottom:-40px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.04)"></div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;position:relative;z-index:1">
+        <!-- Brand -->
+        <div style="display:flex;align-items:center;gap:16px">
+          <div style="width:56px;height:56px;background:rgba(255,255,255,.15);border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+              <polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+          </div>
+          <div>
+            <div style="font-size:20px;font-weight:700;color:#fff;letter-spacing:.01em;line-height:1.2">Doha Technical Trading</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.7);margin-top:3px;letter-spacing:.02em">W.L.L</div>
+          </div>
+        </div>
+        <!-- Contact -->
+        <div style="text-align:right">
+          <div style="font-size:11px;color:rgba(255,255,255,.6);margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em">Contact</div>
+          <div style="font-size:13px;color:#fff;font-weight:500">+974 66682315</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.7);margin-top:2px">Al Aziziya, Qatar</div>
+        </div>
+      </div>
+
+      <!-- STATEMENT label -->
+      <div style="margin-top:22px;position:relative;z-index:1">
+        <span style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;font-size:11px;font-weight:700;letter-spacing:.12em;padding:5px 16px;border-radius:4px;text-transform:uppercase">Account Statement</span>
+        <span style="float:right;color:rgba(255,255,255,.65);font-size:11px;margin-top:4px">Date: ${today()}</span>
+      </div>
+    </div>
+
+    <!-- GOLD ACCENT LINE -->
+    <div style="height:4px;background:linear-gradient(90deg,#d97706,#f59e0b,#fcd34d,#f59e0b,#d97706)"></div>
+
+    <!-- CUSTOMER INFO CARD -->
+    <div style="padding:24px 44px 0">
+      <div style="background:#f8fafc;border-radius:12px;border:1px solid #e2e8f0;padding:20px 24px;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px">
+        <div style="display:flex;align-items:center;gap:16px">
+          <!-- Avatar circle -->
+          <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#065f46,#047857);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#fff;flex-shrink:0;font-family:Georgia,serif">
+            ${(c.name||'?').trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase()}
+          </div>
+          <div>
+            <div style="font-size:17px;font-weight:700;color:#111;margin-bottom:4px">${c.name}</div>
+            <div style="font-size:12px;color:#555;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+              ${c.phone?`<span>📞 ${c.phone}</span>`:''}
+              ${c.nationality?`<span style="color:#aaa">·</span><span>${c.nationality}</span>`:''}
+            </div>
+            ${c.ref?`<div style="font-size:11px;color:#065f46;font-weight:600;margin-top:4px">Ref: ${c.ref}</div>`:''}
+          </div>
+        </div>
+        <!-- Serial badge -->
+        <div style="text-align:right">
+          <div style="font-size:10px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Account No.</div>
+          <div style="font-size:18px;font-weight:700;color:#065f46;font-family:monospace;letter-spacing:.04em">${c.serial}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUMMARY BOXES -->
+    <div style="padding:20px 44px 0;display:flex;gap:12px">
+      <div style="flex:1;background:#fff8f0;border:1px solid #fed7aa;border-radius:10px;padding:14px 18px;text-align:center">
+        <div style="font-size:10px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Total Credit</div>
+        <div style="font-size:16px;font-weight:700;color:#c2410c">${qar(totDue)}</div>
+      </div>
+      <div style="flex:1;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px 18px;text-align:center">
+        <div style="font-size:10px;font-weight:700;color:#065f46;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Total Paid</div>
+        <div style="font-size:16px;font-weight:700;color:#065f46">${qar(totPay)}</div>
+      </div>
+      <div style="flex:1;background:${c.due>0?'#fff1f2':'#f0fdf4'};border:1px solid ${c.due>0?'#fecdd3':'#bbf7d0'};border-radius:10px;padding:14px 18px;text-align:center">
+        <div style="font-size:10px;font-weight:700;color:${c.due>0?'#be123c':'#065f46'};text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Balance Due</div>
+        <div style="font-size:16px;font-weight:700;color:${c.due>0?'#be123c':'#065f46'}">${qar(c.due)}</div>
+      </div>
+    </div>
+
+    <!-- TRANSACTION TABLE -->
+    <div style="padding:20px 44px 0">
+      <div style="font-size:11px;font-weight:700;color:#444;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Transaction History</div>
+      <div style="border:1px solid #e5e7eb;border-radius:10px;overflow:hidden">
+        <table style="width:100%;border-collapse:collapse">
+          <thead>
+            <tr style="background:#064e3b">
+              <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:rgba(255,255,255,.85);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap">Date</th>
+              <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:rgba(255,255,255,.85);text-transform:uppercase;letter-spacing:.06em">Type</th>
+              <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:rgba(255,255,255,.85);text-transform:uppercase;letter-spacing:.06em">Description</th>
+              <th style="padding:10px 12px;text-align:right;font-size:10px;font-weight:700;color:rgba(255,255,255,.85);text-transform:uppercase;letter-spacing:.06em">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows||'<tr><td colspan="4" style="padding:20px;text-align:center;color:#aaa;font-size:12px">No transactions recorded</td></tr>'}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- OUTSTANDING BALANCE BANNER -->
+    <div style="padding:16px 44px">
+      <div style="background:${c.due>0?'linear-gradient(135deg,#7f1d1d,#be123c)':'linear-gradient(135deg,#064e3b,#065f46)'};border-radius:10px;padding:16px 24px;display:flex;justify-content:space-between;align-items:center">
+        <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.85);text-transform:uppercase;letter-spacing:.06em">Outstanding Balance</div>
+        <div style="font-size:24px;font-weight:700;color:#fff">${qar(c.due)}</div>
+      </div>
+    </div>
+
+    <!-- SIGNATURE ROW -->
+    <div style="padding:0 44px;display:flex;justify-content:space-between;margin-top:30px">
+      <div style="text-align:center;flex:1">
+        <div style="border-top:1.5px solid #ccc;padding-top:8px;font-size:11px;color:#888">Customer Signature</div>
+      </div>
+      <div style="width:60px"></div>
+      <div style="text-align:center;flex:1">
+        <div style="border-top:1.5px solid #ccc;padding-top:8px;font-size:11px;color:#888">Authorized Signature</div>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div style="position:absolute;bottom:0;left:0;right:0;background:#f8fafc;border-top:1px solid #e5e7eb;padding:12px 44px;display:flex;justify-content:space-between;align-items:center">
+      <div style="font-size:10px;color:#aaa">Generated by DTT Due Management System</div>
+      <div style="font-size:10px;color:#aaa">Doha Technical Trading W.L.L &nbsp;·&nbsp; +974 66682315</div>
+    </div>
+
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════
+   GENERATE PDF BLOB (jsPDF + html2canvas)
+═══════════════════════════════════════════ */
+async function generatePDFBlob(c){
+  const { jsPDF } = window.jspdf;
+  // Build a hidden render div
+  const div = document.createElement('div');
+  div.style.cssText = 'position:fixed;left:-9999px;top:0;width:794px;background:#fff;font-family:Georgia,serif;color:#111;';
+  div.innerHTML = buildBillHTML(c);
+  document.body.appendChild(div);
+  try {
+    const canvas = await html2canvas(div, { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' });
+    const imgData = canvas.toDataURL('image/jpeg', 0.92);
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pdfW = pdf.internal.pageSize.getWidth();
+    const pdfH = pdf.internal.pageSize.getHeight();
+    const ratio = canvas.height / canvas.width;
+    const imgH = pdfW * ratio;
+    let yPos = 0;
+    // Multi-page support
+    if(imgH <= pdfH){
+      pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, imgH);
+    } else {
+      let remaining = imgH;
+      let srcY = 0;
+      while(remaining > 0){
+        const sliceH = Math.min(pdfH, remaining);
+        const sliceCanvas = document.createElement('canvas');
+        sliceCanvas.width = canvas.width;
+        sliceCanvas.height = (sliceH / imgH) * canvas.height;
+        const ctx = sliceCanvas.getContext('2d');
+        ctx.drawImage(canvas, 0, srcY * canvas.height / imgH, canvas.width, sliceCanvas.height, 0, 0, canvas.width, sliceCanvas.height);
+        const sliceData = sliceCanvas.toDataURL('image/jpeg', 0.92);
+        if(yPos > 0) pdf.addPage();
+        pdf.addImage(sliceData, 'JPEG', 0, 0, pdfW, sliceH);
+        srcY += sliceH;
+        remaining -= sliceH;
+        yPos++;
+      }
+    }
+    return pdf.output('blob');
+  } finally {
+    document.body.removeChild(div);
+  }
+}
+
+/* ═══════════════════════════════════════════
+   SEND WHATSAPP WITH AUTO PDF DOWNLOAD
+═══════════════════════════════════════════ */
+function sendWhatsAppBill(cid){
+  const c = db.customers.find(x=>x.id===cid);
+  if(!c) return;
+  const waPhone = (c.phone||'').replace(/[\s\-\(\)]/g,'').replace(/^\+/,'');
+  if(!waPhone){ showToast('No phone number for this customer', 'error'); return; }
+  const waMsg = encodeURIComponent(
+    'Dear ' + c.name + ',\n' +
+    'Your outstanding balance at Doha Technical Trading is ' + qar(c.due) + '.\n' +
+    'Kindly arrange the payment. Thank you!\n' +
+    '+974 66682315'
+  );
+  window.open('https://wa.me/' + waPhone + '?text=' + waMsg, '_blank');
+}
+
+/* ═══════════════════════════════════════════
+   SAVE / DOWNLOAD PDF (named)
+═══════════════════════════════════════════ */
+async function savePDFBill(cid){
+  const c = db.customers.find(x=>x.id===cid);
+  if(!c) return;
+  showToast('Generating PDF…');
+  try {
+    const blob = await generatePDFBlob(c);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = pdfFileName(c);
+    a.click();
+    setTimeout(()=> URL.revokeObjectURL(url), 5000);
+    showToast('PDF saved as ' + pdfFileName(c));
+  } catch(e){
+    showToast('PDF error — using print instead', 'error');
+    printCustomerStatement(cid);
+  }
 }
 
 function printCustomerStatement(cid){
   const c = db.customers.find(x=>x.id===cid);
   if(!c) return;
-  const totDue = c.transactions.filter(t=>t.type==='due').reduce((s,t)=>s+t.amt,0);
-  const totPay = c.transactions.filter(t=>t.type==='pay').reduce((s,t)=>s+t.amt,0);
-  let running = 0;
-  // ✅ FIX 1 also applied here for print statement sort
-  const rows = [...c.transactions].sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(t=>{
-    running = t.type==='due' ? +(running+t.amt).toFixed(2) : +(Math.max(0,running-t.amt)).toFixed(2);
-    return `<tr>
-      <td>${toDisplay(t.date)||'—'}</td>
-      <td>${t.type==='due'?'<span style="color:#be123c;font-weight:700">CREDIT</span>':'<span style="color:#065f46;font-weight:700">PAYMENT</span>'}</td>
-      <td>${t.desc||'—'}</td>
-      <td style="text-align:right;color:${t.type==='due'?'#be123c':'#065f46'};font-weight:700">${t.type==='due'?'+':'-'}${qar(t.amt)}</td>
-      <td style="text-align:right;font-weight:700;color:${running>0?'#be123c':'#065f46'}">${qar(running)}</td>
-    </tr>`;
-  }).join('');
   const pt = document.getElementById('print-target');
-  pt.innerHTML = buildPrintHeader('Customer Account Statement') + `
-      <table style="width:100%;margin-bottom:10px;border-collapse:collapse">
-        <tr><td style="padding:4px 0;font-size:13px"><b>Customer Name:</b> ${c.name}</td><td style="padding:4px 0;font-size:13px"><b>Serial:</b> ${c.serial}</td></tr>
-        <tr><td style="padding:4px 0;font-size:13px"><b>Mobile:</b> ${c.phone||'—'}</td><td style="padding:4px 0;font-size:13px"><b>Reference:</b> ${c.ref||'—'}</td></tr>
-        <tr><td style="padding:4px 0;font-size:13px"><b>Statement Date:</b> ${today()}</td></tr>
-      </table>
-      <table><thead><tr>
-        <th>Date</th><th>Type</th><th>Description</th><th style="text-align:right">Amount</th><th style="text-align:right">Running Due</th>
-      </tr></thead><tbody>${rows||'<tr><td colspan="5" style="text-align:center;color:#888">No transactions</td></tr>'}
-      </tbody><tfoot><tr>
-        <td colspan="3" style="text-align:right;padding:10px 12px;font-size:12px;border:1px solid #d1d5db">Total Due Added</td>
-        <td style="text-align:right;color:#be123c;padding:10px 12px;border:1px solid #d1d5db">+${qar(totDue)}</td>
-        <td style="border:1px solid #d1d5db"></td>
-      </tr><tr>
-        <td colspan="3" style="text-align:right;padding:10px 12px;font-size:12px;border:1px solid #d1d5db">Total Payments</td>
-        <td style="text-align:right;color:#065f46;padding:10px 12px;border:1px solid #d1d5db">-${qar(totPay)}</td>
-        <td style="border:1px solid #d1d5db"></td>
-      </tr><tr style="background:#fef2f2">
-        <td colspan="3" style="text-align:right;padding:12px 12px;font-size:14px;font-weight:700;border:1px solid #d1d5db">OUTSTANDING BALANCE</td>
-        <td colspan="2" style="text-align:right;color:#be123c;font-size:16px;font-weight:700;padding:12px;border:1px solid #d1d5db">${qar(c.due)}</td>
-      </tr></tfoot></table>
-      <div style="margin-top:50px;display:flex;justify-content:space-between;font-size:12px;color:#888">
-        <span>Customer Signature: ___________________________</span>
-        <span>Authorized By: ___________________________</span>
-      </div>
-    </div>`;
+  pt.innerHTML = buildBillHTML(c);
   window.print();
 }
 
